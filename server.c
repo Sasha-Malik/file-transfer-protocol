@@ -79,22 +79,20 @@ int main()
                     
                     int pid = fork(); //fork a child process
                     if(pid == 0)   //if it is the child process
-                     {
+                    {
                         close(server_sd); //close the copy of server/master socket in child process
-                         
+                        FD_CLR(server_sd,&full_fdset);
+                        
                         char buffer[256];
                         strcpy(buffer, "message from the server!");
                         send(client_sd,buffer,strlen(buffer),0);
                         printf("sent from the server! \n");
                         close(client_sd);
+                        FD_CLR(client_sd,&full_fdset);
                              
                         exit(0);
-                     }
-                    else if (pid < 0) //remove later
-                    {
-                        perror("fork failed");
-                        exit(EXIT_FAILURE);
                     }
+            
                     else //if it is the parent process
                     {
                         close(client_sd); //close the copy of client/secondary socket in parent process
