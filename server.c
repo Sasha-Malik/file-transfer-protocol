@@ -96,6 +96,7 @@ int main()
                     else //if it is the parent process
                     {
                         close(client_sd); //close the copy of client/secondary socket in parent process
+                        FD_CLR(client_sd,&full_fdset);
                     }
 				}
 				else
