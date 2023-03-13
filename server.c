@@ -54,6 +54,9 @@ int main()
     FD_SET(server_sd,&full_fdset);
 
     printf("Server is listening...\n");
+    char buffer[256];
+    int client_sd;
+    int client_sock;
     while(1)
     {
         printf("max fd = %d \n",max_fd);
@@ -71,51 +74,15 @@ int main()
             {
                 if(fd==server_sd)
                 {
-                    int client_sd = accept(server_sd,0,0);
+                    client_sd = accept(server_sd,0,0);
                     printf("Client Connected fd = %d \n",client_sd);
-                   
-                    
-                    int pid = fork(); //fork a child process
-                    if(pid == 0)   //if it is the child process
-                    {
-                       
-                        close(server_sd); //close the copy of server/master socket in child process
-                        
-                        char buffer[256];
-                        strcpy(buffer, "message from the server!");
-                        send(client_sd,buffer,strlen(buffer),0);
-                        printf("sent from the server! \n");
-                        close(client_sd);
-                       
-            
-                        exit(1);
-                    }
-                    else if (pid < 0) {
-                        perror("fork failed");
-                        exit(EXIT_FAILURE);
-                    }
-            
-                    else //if it is the parent process
-                    {
-                        //close(client_sd); //close the copy of client/secondary socket in parent process
-                        FD_SET(client_sd,&full_fdset);
-                        if(client_sd>max_fd)
-                            max_fd = client_sd;
-                       
-                           /* while (1) {
-                                fd_set readfds = full_fdset;
-                                if (select(max_fd + 1, &readfds, NULL, NULL, NULL) == -1) {
-                                    printf("oh crap");
-                                    perror("select");
-                                    exit(EXIT_FAILURE);
-                                }
-                            }*/
-                        
-                    }
+                    FD_SET(client_sd,&full_fdset);
+                    if(client_sd>max_fd)
+                        max_fd = client_sd;
                 }
                 else
                 {
-                    char buffer[256];
+            
                     bzero(buffer,sizeof(buffer));
                     int bytes = recv(fd,buffer,sizeof(buffer),0);
                     if(bytes==0)   //client has closed the connection
@@ -133,7 +100,45 @@ int main()
                                 }
                         }
                     }
-                    printf("%s \n",buffer);
+                    
+                    else
+                    {
+                        int port = atoi(buffer);
+                        printf("%s \n",buffer);
+                        
+                        int pid = fork(); //fork a child process
+                        if(pid == 0)   //if it is the child process
+                        {
+                            // Connect to the client's listening port
+                            struct sockaddr_in client_address;
+                            client_address.sin_family = AF_INET;
+                            client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+                            client_address.sin_port = htons(9001);
+                            
+                            if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+                            {
+                                perror("socket failed");
+                                exit(EXIT_FAILURE);
+                            }
+                           
+                            // connect to the client address and port
+                            if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                perror("Error: connect failed");
+                                exit(EXIT_FAILURE);}
+
+                            // send a message to the client
+                            char *message = "Hello, client!";
+                            if (send(client_sock, message, strlen(message), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);}
+
+                            // close client socket and exit child process
+                            close(client_sock);
+                            exit(EXIT_SUCCESS);
+                        }
+                    }
+                    
+
                 }
             }
         }
