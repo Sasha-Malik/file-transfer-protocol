@@ -42,7 +42,7 @@ int main()
         exit(-1);
     }
     
-    close(server_sd);
+    //close(server_sd);
     
     int port = atoi(buffer);
     server_addr.sin_port = htons(port);

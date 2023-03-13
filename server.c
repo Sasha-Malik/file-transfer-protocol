@@ -109,7 +109,7 @@ int main()
                         int pid = fork(); //fork a child process
                         if(pid == 0)   //if it is the child process
                         {
-                            close(server_sd);
+                            close(client_sd);
                             
                             if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                             {
@@ -145,6 +145,12 @@ int main()
                             // close client socket and exit child process
                             close(client_sock);
                             exit(EXIT_SUCCESS);
+                        }
+                        
+                        else
+                        {
+                            //parent process
+                            close(client_sock);
                         }
                     }
                     
