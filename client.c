@@ -34,7 +34,8 @@ int main()
     
     
     char buffer[256];
-    strcpy(buffer,"9001");
+    fgets(buffer,sizeof(buffer),stdin);
+    buffer[strcspn(buffer, "\n")] = 0;
     if(send(server_sd,buffer,strlen(buffer),0)<0)
     {
         perror("send");
@@ -42,7 +43,9 @@ int main()
     }
     
     close(server_sd);
-    server_addr.sin_port = htons(9000);
+    
+    int port = atoi(buffer);
+    server_addr.sin_port = htons(port);
     
     server_sd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sd < 0) {
@@ -50,20 +53,57 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    if(connect(server_sd,(struct sockaddr*)&server_addr,sizeof(server_addr))<0)
+    //bind
+    if(bind(server_sd, (struct sockaddr*)&server_addr,sizeof(server_addr))<0)
     {
-        perror("Failed to connect to server");
-        exit(EXIT_FAILURE);
+        perror("bind failed");
+        exit(-1);
     }
+    //listen
+    if(listen(server_sd,5)<0)
+    {
+        perror("listen failed");
+        close(server_sd);
+        exit(-1);
+    }
+    
+    
     
     // Change the port number
     
-    int connfd;
-    //connfd = accept(server_sd, 0, 0);
-    // Fork new processes to handle incoming connections
-    while (1) {
+    int connfd, newsockfd;
+    
+    while (1)
+    {
         
-        /*connfd = accept(server_sd, 0, 0);
+        newsockfd = accept(server_sd, 0, 0);
+        if (newsockfd < 0) {
+            perror("Failed to accept incoming connection");
+            exit(EXIT_FAILURE);
+        }
+        
+        recv(newsockfd,buffer,sizeof(buffer),0);
+        printf("%s \n",buffer);
+        bzero(buffer,sizeof(buffer));
+        
+        fgets(buffer,sizeof(buffer),stdin);
+        buffer[strcspn(buffer, "\n")] = 0;
+        if(send(newsockfd,buffer,strlen(buffer),0)<0)
+        {
+            perror("send");
+            exit(-1);
+        }
+        bzero(buffer,sizeof(buffer));
+
+        // Close the new connection
+        close(newsockfd);
+    }
+  
+    // Fork new processes to handle incoming connections
+    /*while (1)
+    {
+        
+        connfd = accept(server_sd, 0, 0);
         if (connfd < 0) {
             perror("Failed to accept connection");
             exit(EXIT_FAILURE);
@@ -74,27 +114,27 @@ int main()
         if (pid < 0) {
             perror("Failed to fork");
             exit(EXIT_FAILURE);
-        } else if (pid == 0) {
+        }
+        else if (pid == 0)
+        {
+            
             // Child process: handle the connection
-            // Use the updated server address structure
-            if (connect(connfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-                perror("Failed to connect to server");
-                exit(EXIT_FAILURE);
-            }
-
-            // Handle the connection
-            // ...
+        
+            recv(connfd,buffer,sizeof(buffer),0);
+            printf("%s \n",buffer);
 
             // Close the connection
             close(connfd);
 
             // Exit the child process
             exit(EXIT_SUCCESS);
-        } else {
+        }
+        else
+        {
             // Parent process: continue accepting new connections
             close(connfd);
-        }*/
-    }
+        }
+    }*/
 
     // Close the socket
     close(server_sd);

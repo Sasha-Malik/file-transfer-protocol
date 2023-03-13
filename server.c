@@ -109,17 +109,22 @@ int main()
                         int pid = fork(); //fork a child process
                         if(pid == 0)   //if it is the child process
                         {
-                            // Connect to the client's listening port
-                            struct sockaddr_in client_address;
-                            client_address.sin_family = AF_INET;
-                            client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-                            client_address.sin_port = htons(9001);
+                            close(server_sd);
                             
                             if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                             {
                                 perror("socket failed");
                                 exit(EXIT_FAILURE);
                             }
+                           
+                            int value = 1;
+                            setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value)); //&(int){1},sizeof(int)
+                            // Connect to the client's listening port
+                            struct sockaddr_in client_address;
+                            client_address.sin_family = AF_INET;
+                            client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+                            client_address.sin_port = htons(port);
+                            
                            
                             // connect to the client address and port
                             if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
@@ -131,6 +136,11 @@ int main()
                             if (send(client_sock, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
                                 exit(EXIT_FAILURE);}
+                            bzero(buffer,sizeof(buffer));
+                            
+                            recv(client_sock,buffer,sizeof(buffer),0);
+                            printf("%s \n",buffer);
+                            bzero(buffer,sizeof(buffer));
 
                             // close client socket and exit child process
                             close(client_sock);
