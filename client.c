@@ -23,7 +23,7 @@ int main()
 	struct sockaddr_in server_addr;
     bzero(&server_addr,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(21);
+    server_addr.sin_port = htons(9000);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	char myIP[16];
@@ -45,21 +45,22 @@ int main()
 	int isAuth = -1;
 	int new_Port, pid, transfersocket, status, client_sockfd, new_dedicated_data_sd;
 	while(1){
+        //bzero(buffer,sizeof(buffer));
 		fgets(buffer,sizeof(buffer),stdin);
 		strcpy(bufferCopy, buffer);
-		char* bc = strtok(bufferCopy, space);
-		if(strcmp(bc, "USER") == 0 || strcmp(bc, "PASS") == 0 || strcmp(bc, "CWD") == 0 || strcmp(bc, "QUIT") == 0){		
-		buffer[strcspn(buffer, "\n")] = 0;
-		if(send(server_sd, buffer,strlen(buffer),0)<0)
-		{
-		    perror("send");
-		    exit(-1);
-		}
-		recv(server_sd,buffer, 0, 0);
-		if(strcmp(buffer, "230, User logged in, proceed") == 0){
-			isAuth = 1;
-		}
-		printf("%s\n", buffer);
+        char* bc = "";//strtok(bufferCopy, space); //causes s
+		if(strcmp(bc, "USER") == 0 || strcmp(bc, "PASS") == 0 || strcmp(bc, "CWD") == 0 || strcmp(bc, "QUIT") == 0 || strcmp(buffer, "test") == 0)
+        {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if(send(server_sd, buffer,strlen(buffer),0)<0){
+                perror("send");
+                exit(-1);}
+            bzero(buffer,sizeof(buffer));
+            recv(server_sd,buffer,sizeof(buffer),0);
+            if(strcmp(buffer, "230, User logged in, proceed") == 0){
+                isAuth = 1;
+            }
+            printf("%s \n", buffer);
 		}
 		else{
 			new_Port = myPort + i++;
@@ -79,6 +80,7 @@ int main()
 				send(server_sd, buffer, sizeof(buffer), 0);
 				pid = fork();
 				if(pid == 0){
+                    close(server_sd);
 					int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
 					struct sockaddr_in data_server_addr;
 					bzero(&data_server_addr,sizeof(data_server_addr));
@@ -116,7 +118,7 @@ int main()
 				}
 				else{
 					// this line is sus, may cause errors. 
-					close(server_sd);	
+                    close(new_dedicated_data_sd);
 				}
 				
 			}
@@ -245,7 +247,7 @@ int main()
     }
   
     // Fork new processes to handle incoming connections
-    /*while (1)
+    while (1)
     {
         
         connfd = accept(server_sd, 0, 0);

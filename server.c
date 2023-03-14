@@ -57,6 +57,7 @@ int main()
     char buffer[256];
     int client_sd;
     int client_sock;
+    char space[1] = " ";
     while(1)
     {
         printf("max fd = %d \n",max_fd);
@@ -79,10 +80,19 @@ int main()
                     FD_SET(client_sd,&full_fdset);
                     if(client_sd>max_fd)
                         max_fd = client_sd;
+                    
+                    bzero(buffer,sizeof(buffer));
+                    recv(client_sd,buffer,sizeof(buffer),0);
+                    printf("%s", buffer);
+                    
+                    bzero(buffer,sizeof(buffer));
+                    char *message = "230, User logged in, proceed";
+                    if (send(client_sd, message, strlen(message), 0) < 0){
+                        perror("Error: send failed");
+                        exit(EXIT_FAILURE);}
                 }
                 else
                 {
-            
                     bzero(buffer,sizeof(buffer));
                     int bytes = recv(fd,buffer,sizeof(buffer),0);
                     if(bytes==0)   //client has closed the connection
@@ -103,8 +113,10 @@ int main()
                     
                     else
                     {
-                        int port = atoi(buffer);
-                        printf("%s \n",buffer);
+                        printf(" MESSAGE FORM CLIENT : %s \n",buffer);
+                        printf("check \n");
+                        char* bc = strtok(buffer, space); // need to implement strtok to get port
+                        int port = atoi(bc);
                         
                         int pid = fork(); //fork a child process
                         if(pid == 0)   //if it is the child process
@@ -124,8 +136,12 @@ int main()
                             client_address.sin_family = AF_INET;
                             client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                             client_address.sin_port = htons(port);
+                            if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                perror("bind error:");
+                                exit(-1);
+                            }
                             
-                           
+
                             // connect to the client address and port
                             if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                 perror("Error: connect failed");
