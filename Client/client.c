@@ -13,7 +13,7 @@ int main()
 {
     //socket
     int server_sd = socket(AF_INET, SOCK_STREAM, 0);
-    if(sockfd < 0 || server_sd < 0){
+    if(server_sd < 0){
         perror("socket:");
         exit(-1);
     }
@@ -46,7 +46,7 @@ int main()
     char bufferCopy[256];
     char bufferCopy2[256];
     int isAuth = -1;
-    int new_Port, pid, transfersocket, status, client_sockfd;
+    int new_Port, pid, transfersocket, status;
     while(1){
         char bufferTemp[256];
         bzero(buffer,sizeof(buffer));
@@ -75,8 +75,8 @@ int main()
 		}
 		else if(strcmp(token, "!PWD") == 0){
 			bzero(bufferCopy2,sizeof(bufferCopy2));
-            getcwd(&bufferCopy2, 256);
-			printf("%s", bufferCopy2);
+            getcwd(bufferCopy2, 256); // removed &
+			printf("%s \n", bufferCopy2);
 		}
 		else if(strcmp(token, "!LIST") == 0){
 			FILE* fptr = popen("ls -l", "r");			
@@ -130,45 +130,42 @@ int main()
                     }
                     int new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
                     char bufferSend[256];
-                    char toSend[256];
                     char toSend2[256];
                     strcpy(bufferSend,buffer);
                     char* tokenSend;
                     
                     tokenSend = strtok(bufferSend, " ");
-                    strcpy(toSend, tokenSend);
                     while (tokenSend != NULL) {
                         strcpy(toSend2, tokenSend);
                         tokenSend = strtok(NULL, " "); // separate the next string
                     }
-                   
-                    //printf("token :%s \n",token);
-                    //printf("toSend2 :%s \n",toSend2);
                     
                     if(strcmp(token, "RETR") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                        printf("%s", buffer);
+                        printf("%s \n", buffer);
                         FILE* fptr = fopen(toSend2, "w");
                         fprintf(fptr, "%s", buffer);
                         fclose(fptr);
+                        bzero(buffer, sizeof(buffer));
+                        recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
+                        printf("%s \n", buffer);
                     }
                     else if(strcmp(token, "STOR") == 0){
                         FILE* fptr = fopen(toSend2, "r");
                         char fmsg[1000];
                         fscanf(fptr, "%s", fmsg);
                         send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
+                        bzero(buffer, sizeof(buffer));
+                        recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
+                        printf("%s \n", buffer);
                     }
                     else if(strcmp(token, "LIST") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                        printf("%s", buffer);
+                        printf("%s \n", buffer);
                     }
                     
 
                     close(new_dedicated_data_sd);
-                }
-                else{
-                    // parent process
-                    
                 }
                 
             }
@@ -177,156 +174,9 @@ int main()
                 exit(-1);
             }
             
-            
-            
         }
 
-}
-    
-    /*
-    char buffer[256];
-    char inputBuffer[256];
-    fgets(buffer,sizeof(buffer),stdin);
-    buffer[strcspn(buffer, "\n")] = 0;
-    if(send(server_sd,buffer,strlen(buffer),0)<0)
-    {
-        perror("send");
-        exit(-1);
     }
-    
-    //close(server_sd);
-    
-    int port = atoi(buffer);
-    server_addr.sin_port = htons(port);
-    
-    server_sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_sd < 0) {
-        perror("Failed to create socket");
-        exit(EXIT_FAILURE);
-    }
-    //bind
-    if(bind(server_sd, (struct sockaddr*)&server_addr,sizeof(server_addr))<0)
-    {
-        perror("bind failed");
-        exit(-1);
-    }
-    //listen
-    if(listen(server_sd,5)<0)
-    {
-        perror("listen failed");
-        close(server_sd);
-        exit(-1);
-    }
-    
-    
-    
-    
-    // Change the port number
-    //the newsockfd doesn't have anything to do with the port, right?
-    int connfd, newsockfd;
-    
-    while (1)
-    {
-        bzero(buffer,sizeof(inputbuffer));
-        fgets(buffer,sizeof(inputBuffer),stdin);
-        
-        newsockfd = accept(server_sd, &((struct sockaddr*)client_addr), sizeof(client_addr));
-        if (newsockfd < 0) {
-            perror("Failed to accept incoming connection");
-            exit(EXIT_FAILURE);
-        }
-        recv(newsockfd,buffer,sizeof(buffer),0);
-        if(inputBuffer.substring(0, 4) == "PORT"){
-            send
-        
-        
-            //we want to send client_addr.sin_addr.s_addr, client_addr.sin_port to the server.
-            //
-            
-        }
-        else if(inputBuffer.substring(0, 4) == "STOR"){
-            //we want to send client_addr.sin_addr.s_addr, client_addr.sin_port to the server, and we need the stor command so the server knows.
-            //open the text file on our end, store it in a buffer, send it to server_sd via client_addr.sin_port.
-        
-        }
-        else if(inputBuffer == "LIST"){
-            //we want to send client_addr.sin_addr.s_addr, client_addr.sin_port to the server, also we need to use the list command so the server knows.
-            //then, we want to receive from anywhere, and display this data.
-        
-        }
-        else if(inputBuffer == "!LIST"){
-            //display all of the files in the current directory, c package?
-        }
-        else if(inputBuffer.substring(0, 4) == "RETR"){
-            //we want to send client_addr.sin_addr.s_addr, client_addr.sin_port to the server.
-            //we want to receive from anywhere, and we display this data.
-        
-        }
-        else if(inputBuffer.substring(0, 3) == "CWD"){
-            //we want to send client_addr.sin_addr.s_addr, client_addr.sin_port to the server, and we need to use the CWD command so the server knows.
-            //we then want to receive from anywhere, store it in a buffer, and display the data.
-        }
-        else if(inputBuffer.substring(0, 4) == "!CWD"){
-            //switch our current directory, c package?
-        }
-        else if(inputBuffer == "PWD"){
-            //c package?
-        }
-        else if(inputBuffer == "!PWD"){
-            //c package?
-        }
-        else if(inputBuffer == "EXIT"){
-            exit(0);
-        }
-        
-        
-        
-        
-        
-        buffer[strcspn(buffer, "\n")] = 0;
-        if(send(newsockfd,buffer,strlen(buffer),0)<0)
-        {
-            perror("send");
-            exit(-1);
-        }
-        bzero(buffer,sizeof(buffer));
-        // Close the new connection
-        close(newsockfd);
-    }
-  
-    // Fork new processes to handle incoming connections
-    while (1)
-    {
-        
-        connfd = accept(server_sd, 0, 0);
-        if (connfd < 0) {
-            perror("Failed to accept connection");
-            exit(EXIT_FAILURE);
-        }
-        // Fork a new process to handle the connection
-        int pid = fork();
-        if (pid < 0) {
-            perror("Failed to fork");
-            exit(EXIT_FAILURE);
-        }
-        else if (pid == 0)
-        {
-            
-            // Child process: handle the connection
-        
-            recv(connfd,buffer,sizeof(buffer),0);
-            printf("%s \n",buffer);
-            // Close the connection
-            close(connfd);
-            // Exit the child process
-            exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            // Parent process: continue accepting new connections
-            close(connfd);
-        }
-    }*/
 
     // Close the socket
     close(server_sd);

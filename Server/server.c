@@ -31,7 +31,7 @@ int main()
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(9000);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); //INADDR_ANY, INADDR_LOOP
-
+    
     //bind
     if(bind(server_sd, (struct sockaddr*)&server_addr,sizeof(server_addr))<0)
     {
@@ -49,11 +49,11 @@ int main()
     fd_set full_fdset;
     fd_set read_fdset;
     FD_ZERO(&full_fdset);
-
+    
     int max_fd = server_sd;
-
+    
     FD_SET(server_sd,&full_fdset);
-
+    
     printf("Server is listening...\n");
     char buffer[256];
     char bufferCopy[256];
@@ -71,13 +71,13 @@ int main()
     {
         printf("max fd = %d \n",max_fd);
         read_fdset = full_fdset;
-
+        
         if(select(max_fd+1,&read_fdset,NULL,NULL,NULL)<0)
         {
             perror("select");
             exit (-1);
         }
-
+        
         for(int fd = 3 ; fd<=max_fd; fd++)
         {
             if(FD_ISSET(fd,&read_fdset))
@@ -113,19 +113,19 @@ int main()
                     
                     else
                     {
-
+                        
                         printf("buffer from client : %s \n", buffer);
                         char *token;
                         strcpy(bufferCopy,buffer);
                         token = strtok(bufferCopy, " ");
-                    
+                        
                         if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0)
                         {
                             //getting strings from buffer
                             char *token1;
                             char input[20];
                             token1 = strtok(buffer, " "); // separate the first string
-                           
+                            
                             while (token1 != NULL) {
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
@@ -134,52 +134,49 @@ int main()
                             
                             if(strcmp(token, "USER") == 0)
                             {
-                                 FILE *fp;
-                                 char line[100], *username, *password;
-                                 int found = 0;
-
-                                 fp = fopen("users.txt", "r");
-                                 if (fp == NULL) {
-                                     printf("Error opening file.");
-                                     return 1;
-                                 }
-
-                                 while (fgets(line, 100, fp) != NULL) {
-                                     username = strtok(line, ",");
-                                     password = strtok(NULL, ",");
-
-                                     if (strcmp(username, input) == 0) {
-                                         strcpy(user, username);
-                                         strcpy(pass,password);
-                                         found = 1;
-                                         break;}
-                                 }
-
-                                 if (!found)
-                                 {
-                                     char *message = "530 Not logged in";
-                                     if (send(fd, message, strlen(message), 0) < 0){
-                                         perror("Error: send failed");
-                                         exit(EXIT_FAILURE);}
-                                 }
+                                FILE *fp;
+                                char line[100], *username, *password;
+                                int found = 0;
                                 
-                                 if(found)
-                                 {
-                                     userCheck = 1;
-                                     char *message = "Username OK, need password";
-                                     if (send(fd, message, strlen(message), 0) < 0){
-                                         perror("Error: send failed");
-                                         exit(EXIT_FAILURE);}
-                                 }
-                                     
-
-                                 fclose(fp);
+                                fp = fopen("users.txt", "r");
+                                if (fp == NULL) {
+                                    printf("Error opening file.");
+                                    return 1;
+                                }
                                 
+                                while (fgets(line, 100, fp) != NULL) {
+                                    username = strtok(line, ",");
+                                    password = strtok(NULL, ",");
+                                    
+                                    if (strcmp(username, input) == 0) {
+                                        strcpy(user, username);
+                                        strcpy(pass,password);
+                                        found = 1;
+                                        break;}
+                                }
+                                
+                                if (!found)
+                                {
+                                    char *message = "530 Not logged in";
+                                    if (send(fd, message, strlen(message), 0) < 0){
+                                        perror("Error: send failed");
+                                        exit(EXIT_FAILURE);}
+                                }
+                                
+                                if(found)
+                                {
+                                    userCheck = 1;
+                                    char *message = "Username OK, need password";
+                                    if (send(fd, message, strlen(message), 0) < 0){
+                                        perror("Error: send failed");
+                                        exit(EXIT_FAILURE);}
+                                }
+                                fclose(fp);
                             }
                             
                             else if(strcmp(token, "PASS") == 0 && userCheck == 1)
                             {
-                               
+                                
                                 if(strcmp(input,pass) == 0)
                                 {
                                     char *message = "230, User logged in, proceed";
@@ -194,11 +191,9 @@ int main()
                                     if (send(fd, message, strlen(message), 0) < 0){
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
-                                    
                                 }
-                             
                             }
-                           
+                            
                         }
                         else if(strcmp(token,"PORT") == 0)
                         {
@@ -212,8 +207,8 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
-                            printf("input : %s \n",input); //contains the new port
-                        
+                            //printf("input : %s \n",input); //contains the new port
+                            
                             strcpy(newPort,input);
                             
                             char *message = "200 PORT command successful.";
@@ -223,7 +218,6 @@ int main()
                         }
                         else if(strcmp(token,"RETR") == 0)
                         {
-                            
                             //getting strings from original buffer
                             char *token1;
                             char input[20]; //contains the file name
@@ -232,7 +226,7 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
-                            printf("input : %s \n",input); //contains the file name
+                            //printf("input : %s \n",input); //contains the file name
                             
                             int port = atoi(newPort);
                             
@@ -242,11 +236,9 @@ int main()
                                 close(server_sd);//SHOULD BE FD?
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-                                {
-                                    perror("socket failed");
-                                    exit(EXIT_FAILURE);
-                                }
-                               
+                                {   perror("socket failed");
+                                    exit(EXIT_FAILURE);}
+                                
                                 int value = 1;
                                 setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value));
                                 
@@ -256,51 +248,36 @@ int main()
                                 client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                                 client_address.sin_port = htons(port);
                                 
-                                //NEED THE SERVER TO BIND TO PORT 9020
-                                
-                                /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
-                                    perror("bind error:");
-                                    exit(-1);
-                                }*/
-                                
-
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
-
-								 char* success = "150 File status okay; about to open data connection.";
-                            	 if (send(client_sock, success, strlen(success), 0) < 0){
+                                
+                                char* success = "150 File status okay; about to open data connection.";
+                                if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
-                                    exit(EXIT_FAILURE);
-                                }
-                                    
-
+                                    exit(EXIT_FAILURE);}
+                                
                                 FILE* fptr = fopen(input, "r");
                                 char message[256];
                                 fscanf(fptr, "%s", message);
                                 
-                                bzero(success, sizeof(success));
-								success = "226 Transfer completed.";
-
+                                //bzero(success, sizeof(success));
+                                success = "226 Transfer completed.";
+                                
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
-                                    exit(EXIT_FAILURE);
-                                }
-
+                                    exit(EXIT_FAILURE);}
+                                
+                                //printf("done");
+                                
                                 // close client socket and exit child process
                                 close(client_sock);
                                 exit(EXIT_SUCCESS);
                             }
                             
-                            else
-                            {
-                                //parent process
-                                //close(client_sock);
-                            }
                         }
-                    }
-                    else if(strcmp(token,"STOR") == 0)
+                        else if(strcmp(token,"STOR") == 0)
                         {
                             
                             //getting strings from original buffer
@@ -311,7 +288,7 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
-                            printf("input : %s \n",input); //contains the file name
+                            //printf("input : %s \n",input); //contains the file name
                             
                             int port = atoi(newPort);
                             
@@ -321,11 +298,9 @@ int main()
                                 close(server_sd);//SHOULD BE FD?
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-                                {
-                                    perror("socket failed");
-                                    exit(EXIT_FAILURE);
-                                }
-                               
+                                {   perror("socket failed");
+                                    exit(EXIT_FAILURE);}
+                                
                                 int value = 1;
                                 setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value));
                                 
@@ -336,62 +311,49 @@ int main()
                                 client_address.sin_port = htons(port);
                                 
                                 //NEED THE SERVER TO BIND TO PORT 9020
-                                
                                 /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
-                                    perror("bind error:");
-                                    exit(-1);
-                                }*/
-                               
-                            	
-                            	
-
+                                 perror("bind error:");
+                                 exit(-1);
+                                 }*/
+                                
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
                                 
-                            	char* success = "150 File status okay; about to open data connection.";
-                            	 if (send(client_sock, success, strlen(success), 0) < 0){
-                                    perror("Error: send failed");
-                                    exit(EXIT_FAILURE);
-                                }
-                                    
-								char message[256];
-								recv(client_sock, message, strlen(message), 0);
-								fopen(input, "w");
-								fprintf(input, "%s", message);
-								
-								bzero(success, sizeof(success));
-								success = "226 Transfer completed.";
-
+                                char* success = "150 File status okay; about to open data connection.";
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
-                                    exit(EXIT_FAILURE);
-                                }
-                                    
-
+                                    exit(EXIT_FAILURE);}
+                                
+                                char message[256];
+                                recv(client_sock, message, strlen(message), 0);
+                                FILE *fptr = fopen(input, "w");
+                                fprintf(fptr, "%s", message);
+                                
+                               // bzero(success, sizeof(success));
+                                success = "226 Transfer completed.";
+                                
+                                if (send(client_sock, success, strlen(success), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);}
+                                
                                 // close client socket and exit child process
                                 close(client_sock);
                                 exit(EXIT_SUCCESS);
                             }
                             
-                            else
-                            {
-                                //parent process
-                                //close(client_sock);
-                            }
-                        }
-                        
-              
-                    
-
-                }
-            }
-        }
-
-    }
-
-    //close
+                         }//else if stor
+                    } //else
+                }//another else
+            }//if
+            
+        }//for
+        
+      }//while
+        
+        //close
     close(server_sd);
     return 0;
-}
+}//int main
+
