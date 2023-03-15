@@ -1,3 +1,4 @@
+
 //============================================================================
 // Name         : Chat Server using Select()
 // Description  : This Program will receive messages from several clients using
@@ -63,6 +64,8 @@ int main()
     int client_sock;
     char space[1] = " ";
     int userCheck = 0;
+    int auth = 0;
+    char newPort[256];
     
     while(1)
     {
@@ -183,6 +186,7 @@ int main()
                                     if (send(fd, message, strlen(message), 0) < 0){
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
+                                    auth = 1;
                                 }
                                 else
                                 {
@@ -194,18 +198,48 @@ int main()
                                 }
                              
                             }
-                            
                            
                         }
-                        else
+                        else if(strcmp(token,"PORT") == 0)
+                        {
+                            //FIRST HANDLE PORT COMMAND
+                            
+                            //getting strings from original buffer
+                            char *token1;
+                            char input[20]; //contains the file name
+                            token1 = strtok(buffer, " "); // separate the first string
+                            while (token1 != NULL) {
+                                strcpy(input, token1);
+                                token1 = strtok(NULL, " "); // separate the next string
+                            }
+                            printf("input : %s \n",input); //contains the new port
+                        
+                            strcpy(newPort,input);
+                            
+                            char *message = "200 PORT command successful.";
+                            if (send(fd, message, strlen(message), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);}
+                        }
+                        else if(strcmp(token,"RETR") == 0)
                         {
                             
-                            int port = 9001;//atoi(bc);
+                            //getting strings from original buffer
+                            char *token1;
+                            char input[20]; //contains the file name
+                            token1 = strtok(buffer, " "); // separate the first string
+                            while (token1 != NULL) {
+                                strcpy(input, token1);
+                                token1 = strtok(NULL, " "); // separate the next string
+                            }
+                            printf("input : %s \n",input); //contains the file name
+                            
+                            int port = atoi(newPort);
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
                             {
-                                close(client_sd);
+                                close(server_sd);//SHOULD BE FD?
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                                 {
@@ -214,16 +248,20 @@ int main()
                                 }
                                
                                 int value = 1;
-                                setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value)); //&(int){1},sizeof(int)
+                                setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value));
+                                
                                 // Connect to the client's listening port
                                 struct sockaddr_in client_address;
                                 client_address.sin_family = AF_INET;
                                 client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                                 client_address.sin_port = htons(port);
-                                if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                
+                                //NEED THE SERVER TO BIND TO PORT 9020
+                                
+                                /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("bind error:");
                                     exit(-1);
-                                }
+                                }*/
                                 
 
                                 // connect to the client address and port
@@ -231,16 +269,24 @@ int main()
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
 
-                                // send a message to the client
-                                char *message = "Hello, client!";
-                                if (send(client_sock, message, strlen(message), 0) < 0){
+								 char* success = "150 File status okay; about to open data connection.";
+                            	 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
-                                    exit(EXIT_FAILURE);}
-                                bzero(buffer,sizeof(buffer));
+                                    exit(EXIT_FAILURE);
+                                }
+                                    
+
+                                FILE* fptr = fopen(input, "r");
+                                char message[256];
+                                fscanf(fptr, "%s", message);
                                 
-                                recv(client_sock,buffer,sizeof(buffer),0);
-                                printf("%s \n",buffer);
-                                bzero(buffer,sizeof(buffer));
+                                bzero(success, sizeof(success));
+								success = "226 Transfer completed.";
+
+                                if (send(client_sock, success, strlen(success), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                }
 
                                 // close client socket and exit child process
                                 close(client_sock);
@@ -250,10 +296,91 @@ int main()
                             else
                             {
                                 //parent process
-                                close(client_sock);
+                                //close(client_sock);
                             }
                         }
                     }
+                    else if(strcmp(token,"STOR") == 0)
+                        {
+                            
+                            //getting strings from original buffer
+                            char *token1;
+                            char input[20]; //contains the file name
+                            token1 = strtok(buffer, " "); // separate the first string
+                            while (token1 != NULL) {
+                                strcpy(input, token1);
+                                token1 = strtok(NULL, " "); // separate the next string
+                            }
+                            printf("input : %s \n",input); //contains the file name
+                            
+                            int port = atoi(newPort);
+                            
+                            int pid = fork(); //fork a child process
+                            if(pid == 0)   //if it is the child process
+                            {
+                                close(server_sd);//SHOULD BE FD?
+                                
+                                if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+                                {
+                                    perror("socket failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                               
+                                int value = 1;
+                                setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value));
+                                
+                                // Connect to the client's listening port
+                                struct sockaddr_in client_address;
+                                client_address.sin_family = AF_INET;
+                                client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+                                client_address.sin_port = htons(port);
+                                
+                                //NEED THE SERVER TO BIND TO PORT 9020
+                                
+                                /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                    perror("bind error:");
+                                    exit(-1);
+                                }*/
+                               
+                            	
+                            	
+
+                                // connect to the client address and port
+                                if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                    perror("Error: connect failed");
+                                    exit(EXIT_FAILURE);}
+                                
+                            	char* success = "150 File status okay; about to open data connection.";
+                            	 if (send(client_sock, success, strlen(success), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                                    
+								char message[256];
+								recv(client_sock, message, strlen(message), 0);
+								fopen(input, "w");
+								fprintf(input, "%s", message);
+								
+								bzero(success, sizeof(success));
+								success = "226 Transfer completed.";
+
+                                if (send(client_sock, success, strlen(success), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                                    
+
+                                // close client socket and exit child process
+                                close(client_sock);
+                                exit(EXIT_SUCCESS);
+                            }
+                            
+                            else
+                            {
+                                //parent process
+                                //close(client_sock);
+                            }
+                        }
                         
               
                     
