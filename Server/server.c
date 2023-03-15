@@ -249,6 +249,18 @@ int main()
                                 client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                                 client_address.sin_port = htons(port);
                                 
+                                struct sockaddr_in data_server_addr;
+                                bzero(&data_server_addr,sizeof(data_server_addr));
+                                data_server_addr.sin_family = AF_INET;
+                                data_server_addr.sin_port = htons(9020);
+                                data_server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                                
+                                //NEED THE SERVER TO BIND TO PORT 9020
+                                if(bind(client_sock, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
+                                 perror("bind error:");
+                                 exit(-1);
+                                 }
+                                
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
@@ -313,11 +325,17 @@ int main()
                                 client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                                 client_address.sin_port = htons(port);
                                 
+                                struct sockaddr_in data_server_addr;
+                                bzero(&data_server_addr,sizeof(data_server_addr));
+                                data_server_addr.sin_family = AF_INET;
+                                data_server_addr.sin_port = htons(9020);
+                                data_server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                                
                                 //NEED THE SERVER TO BIND TO PORT 9020
-                                /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                if(bind(client_sock, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
                                  perror("bind error:");
                                  exit(-1);
-                                 }*/
+                                 }
                                 
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
@@ -329,18 +347,29 @@ int main()
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
                                 
-                                char fmsg[256];
-                                bzero(fmsg, sizeof(fmsg));
-                                int b = recv(client_sock,fmsg, sizeof(fmsg), 0);
-                                printf("message : %s \n", fmsg);
-                                printf("%d \n",b);
-                                FILE *fptr = fopen(input, "w");
-                                fprintf(fptr, "%s", fmsg);
+                                FILE *fp = fopen(input, "w");
+                                fclose(fp);
                                 
-                               // bzero(success, sizeof(success));
+                                FILE *fptr = fopen(input, "a");
+                            
+                                char fmsg[1024];
+                                while(1)
+                                {
+                                    int b = recv(client_sock,fmsg, sizeof(fmsg), 0);
+                                    if(strcmp(fmsg,"") == 0)
+                                    {
+                                        break;
+                                    }
+                                        
+                                    //printf("message : %s \n", fmsg);
+                                    fprintf(fptr, "%s", fmsg);
+                                    bzero(fmsg, sizeof(fmsg));
+                                }
+                                
+                                fclose(fptr);
                                 success = "226 Transfer completed.";
-                                
-                                if (send(client_sock, success, strlen(success), 0) < 0){
+                       
+                                if(send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
                                 
