@@ -226,6 +226,7 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
+                            input[strcspn(input, "\n")] = 0;
                             //printf("input : %s \n",input); //contains the file name
                             
                             int port = atoi(newPort);
@@ -288,6 +289,8 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
+                            
+                            input[strcspn(input, "\n")] = 0;
                             //printf("input : %s \n",input); //contains the file name
                             
                             int port = atoi(newPort);
@@ -295,7 +298,7 @@ int main()
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
                             {
-                                close(server_sd);//SHOULD BE FD?
+                                close(server_sd);
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                                 {   perror("socket failed");
@@ -326,10 +329,13 @@ int main()
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
                                 
-                                char message[256];
-                                recv(client_sock, message, strlen(message), 0);
+                                char fmsg[256];
+                                bzero(fmsg, sizeof(fmsg));
+                                int b = recv(client_sock,fmsg, sizeof(fmsg), 0);
+                                printf("message : %s \n", fmsg);
+                                printf("%d \n",b);
                                 FILE *fptr = fopen(input, "w");
-                                fprintf(fptr, "%s", message);
+                                fprintf(fptr, "%s", fmsg);
                                 
                                // bzero(success, sizeof(success));
                                 success = "226 Transfer completed.";
