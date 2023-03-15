@@ -69,22 +69,22 @@ int main()
             printf("%s \n", buffer);
         }
         else if(strcmp(token, "!CWD") == 0){
-			bzero(bufferCopy2,sizeof(bufferCopy2));
+            bzero(bufferCopy2,sizeof(bufferCopy2));
             fgets(bufferCopy2,sizeof(bufferCopy2),stdin);
-			chdir(bufferCopy2);
-		}
-		else if(strcmp(token, "!PWD") == 0){
-			bzero(bufferCopy2,sizeof(bufferCopy2));
+            chdir(bufferCopy2);
+        }
+        else if(strcmp(token, "!PWD") == 0){
+            bzero(bufferCopy2,sizeof(bufferCopy2));
             getcwd(bufferCopy2, 256); // removed &
-			printf("%s \n", bufferCopy2);
-		}
-		else if(strcmp(token, "!LIST") == 0){
-			FILE* fptr = popen("ls -l", "r");			
-			char l[256];
-			while(fgets(l, 255, fptr)!= NULL){
-				printf("%s\n", l);
-			}
-		}
+            printf("%s \n", bufferCopy2);
+        }
+        else if(strcmp(token, "!LIST") == 0){
+            FILE* fptr = popen("ls -l", "r");
+            char l[256];
+            while(fgets(l, 255, fptr)!= NULL){
+                printf("%s\n", l);
+            }
+        }
         else
         {
             i++;
@@ -140,7 +140,26 @@ int main()
                         tokenSend = strtok(NULL, " "); // separate the next string
                     }
                     
-                    if(strcmp(token, "RETR") == 0){
+                    //printf("token : %s \n",token);
+                    
+                    if(strcmp(token, "STOR") == 0){
+                        toSend2[strcspn(toSend2, "\n")] = 0;
+                        //printf("%s. \n",toSend2);
+                        FILE* fptr = fopen(toSend2, "r");
+                        char fmsg[1024];
+                        bzero(fmsg, sizeof(fmsg));
+                        fgets(fmsg, 1024, fptr); //!= NULL
+                        //fscanf(fptr, "%s", fmsg);
+                        char temp[256];
+                        bzero(temp, sizeof(temp));
+                        strcpy(temp,fmsg);
+                        //printf("message : %s \n", fmsg);
+                        send(new_dedicated_data_sd, temp, sizeof(temp), 0);
+                        bzero(buffer, sizeof(buffer));
+                        recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
+                        printf("%s \n", buffer);
+                    }
+                    else if(strcmp(token, "RETR") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s \n", buffer);
                         FILE* fptr = fopen(toSend2, "w");
@@ -150,15 +169,7 @@ int main()
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s \n", buffer);
                     }
-                    else if(strcmp(token, "STOR") == 0){
-                        FILE* fptr = fopen(toSend2, "r");
-                        char fmsg[1000];
-                        fscanf(fptr, "%s", fmsg);
-                        send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
-                        bzero(buffer, sizeof(buffer));
-                        recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                        printf("%s \n", buffer);
-                    }
+               
                     else if(strcmp(token, "LIST") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s \n", buffer);
