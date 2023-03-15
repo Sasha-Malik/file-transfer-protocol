@@ -115,9 +115,7 @@ int main()
                         char *token;
                         strcpy(bufferCopy,buffer);
                         token = strtok(bufferCopy, " ");
-                        //printf("token : %s \n", token);
-           
-                        /*if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy2, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "test") == 0)*/
+                    
                         if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0)
                         {
                             //getting strings from buffer
@@ -137,7 +135,6 @@ int main()
                                  char line[100], *username, *password;
                                  int found = 0;
 
-
                                  fp = fopen("users.txt", "r");
                                  if (fp == NULL) {
                                      printf("Error opening file.");
@@ -149,12 +146,10 @@ int main()
                                      password = strtok(NULL, ",");
 
                                      if (strcmp(username, input) == 0) {
-                                         //printf("Username found. Password is %s \n", password);
                                          strcpy(user, username);
                                          strcpy(pass,password);
                                          found = 1;
-                                         break;
-                                     }
+                                         break;}
                                  }
 
                                  if (!found)
