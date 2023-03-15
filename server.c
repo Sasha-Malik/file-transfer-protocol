@@ -238,7 +238,7 @@ int main()
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
                             {
-                                close(client_sd);//SHOULD BE FD?
+                                close(server_sd);//SHOULD BE FD?
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                                 {
@@ -255,7 +255,7 @@ int main()
                                 client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                                 client_address.sin_port = htons(port);
                                 
-                                //NEED THE SERVER TO BIND TO PORT 20
+                                //NEED THE SERVER TO BIND TO PORT 9020
                                 
                                 /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("bind error:");
@@ -287,7 +287,7 @@ int main()
                             else
                             {
                                 //parent process
-                                close(client_sock);
+                                //close(client_sock);
                             }
                         }
                     }
