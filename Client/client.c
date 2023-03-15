@@ -144,7 +144,9 @@ int main()
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s \n", buffer);
                         FILE* fptr = fopen(toSend2, "w");
-                        fprintf(fptr, "%s", buffer);
+                        while(fgets(buffer, strlen(buffer), fptr) != NULL){
+                        	fprintf(fptr, "%s", buffer);	
+                        }
                         fclose(fptr);
                         bzero(buffer, sizeof(buffer));
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
@@ -152,9 +154,10 @@ int main()
                     }
                     else if(strcmp(token, "STOR") == 0){
                         FILE* fptr = fopen(toSend2, "r");
-                        char fmsg[1000];
-                        fscanf(fptr, "%s", fmsg);
-                        send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
+                        char fmsg[2048];
+                        while(fgets(fmsg, strlen(fmsg), fptr) != NULL){
+                        	send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);	
+                        }
                         bzero(buffer, sizeof(buffer));
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s \n", buffer);
