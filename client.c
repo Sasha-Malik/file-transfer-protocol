@@ -43,7 +43,7 @@ int main()
     printf("Connected to server \n");
     char buffer[256];
     char bufferCopy[256];
-   
+    char bufferCopy2[256];
     int isAuth = -1;
     int new_Port, pid, transfersocket, status, client_sockfd, new_dedicated_data_sd;
     while(1){
@@ -54,7 +54,7 @@ int main()
         char *token;
         token = strtok(bufferTemp, " ");
 
-        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0)
+        if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "PWD") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
@@ -67,9 +67,20 @@ int main()
             }
             printf("%s \n", buffer);
         }
+        else if(strcmp(bufferCopy, "!CWD") == 0){
+			bzero(bufferCopy2,sizeof(bufferCopy2));
+            fgets(bufferCopy2,sizeof(bufferCopy2),stdin);
+			chdir(bufferCopy2);
+		}
+		else if(strcmp(bufferCopy, "!PWD") == 0){
+			bzero(bufferCopy2,sizeof(bufferCopy2));
+            getcwd(&bufferCopy2, 256);
+			printf("%s", bufferCopy2);
+		}
         else
         {
-            new_Port = myPort + i++;
+            i++;
+            new_Port = myPort + i;
             //printf("%d",new_Port);
             char msg[256] = "PORT 127.0.0.1";
             char* sp = " ";
