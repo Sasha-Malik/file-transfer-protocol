@@ -34,7 +34,7 @@ int main()
     socklen_t len = sizeof(my_addr);
     getsockname(sockfd, (struct sockaddr *)&my_addr, &len);
     inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
-    myPort = ntohs(my_addr.sin_port);
+    myPort = 9005;//ntohs(my_addr.sin_port);
         
     if(connect(server_sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
         perror("connect:");
@@ -54,7 +54,7 @@ int main()
         char *token;
         token = strtok(bufferTemp, " ");
 
-        if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "PWD") == 0)
+        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "CWD") == 0 || strcmp(token, "QUIT") == 0 || strcmp(token, "PWD") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
@@ -67,12 +67,12 @@ int main()
             }
             printf("%s \n", buffer);
         }
-        else if(strcmp(bufferCopy, "!CWD") == 0){
+        else if(strcmp(token, "!CWD") == 0){
 			bzero(bufferCopy2,sizeof(bufferCopy2));
             fgets(bufferCopy2,sizeof(bufferCopy2),stdin);
 			chdir(bufferCopy2);
 		}
-		else if(strcmp(bufferCopy, "!PWD") == 0){
+		else if(strcmp(token, "!PWD") == 0){
 			bzero(bufferCopy2,sizeof(bufferCopy2));
             getcwd(&bufferCopy2, 256);
 			printf("%s", bufferCopy2);
@@ -92,11 +92,12 @@ int main()
                 perror("send");
                 exit(-1);
             }
-            printf("sent from client");
+            //printf("sent from client");
             bzero(bufferCopy, sizeof(bufferCopy));
             recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
             if(strcmp(bufferCopy, "200 PORT command successful"))
             {
+                printf("%s \n",bufferCopy);
                 printf("buffer : %s \n",buffer);
                 send(server_sd, buffer, sizeof(buffer), 0);
              
@@ -133,8 +134,8 @@ int main()
                         tokenSend = strtok(NULL, " "); // separate the next string
                     }
                    
-                    printf("token :%s \n",token);
-                    printf("toSend2 :%s \n",toSend2);
+                    //printf("token :%s \n",token);
+                    //printf("toSend2 :%s \n",toSend2);
                     
                     if(strcmp(token, "RETR") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);

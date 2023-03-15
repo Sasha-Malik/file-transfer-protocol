@@ -63,6 +63,8 @@ int main()
     int client_sock;
     char space[1] = " ";
     int userCheck = 0;
+    int auth = 0;
+    char newPort[256];
     
     while(1)
     {
@@ -183,6 +185,7 @@ int main()
                                     if (send(fd, message, strlen(message), 0) < 0){
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
+                                    auth = 1;
                                 }
                                 else
                                 {
@@ -194,18 +197,48 @@ int main()
                                 }
                              
                             }
-                            
                            
                         }
-                        else
+                        else if(strcmp(token,"PORT") == 0)
+                        {
+                            //FIRST HANDLE PORT COMMAND
+                            
+                            //getting strings from original buffer
+                            char *token1;
+                            char input[20]; //contains the file name
+                            token1 = strtok(buffer, " "); // separate the first string
+                            while (token1 != NULL) {
+                                strcpy(input, token1);
+                                token1 = strtok(NULL, " "); // separate the next string
+                            }
+                            printf("input : %s \n",input); //contains the new port
+                        
+                            strcpy(newPort,input);
+                            
+                            char *message = "200 PORT command successful.";
+                            if (send(fd, message, strlen(message), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);}
+                        }
+                        else if(strcmp(token,"RETR") == 0)
                         {
                             
-                            int port = 9001;//atoi(bc);
+                            //getting strings from original buffer
+                            char *token1;
+                            char input[20]; //contains the file name
+                            token1 = strtok(buffer, " "); // separate the first string
+                            while (token1 != NULL) {
+                                strcpy(input, token1);
+                                token1 = strtok(NULL, " "); // separate the next string
+                            }
+                            printf("input : %s \n",input); //contains the file name
+                            
+                            int port = atoi(newPort);
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
                             {
-                                close(client_sd);
+                                close(client_sd);//SHOULD BE FD?
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                                 {
@@ -214,16 +247,20 @@ int main()
                                 }
                                
                                 int value = 1;
-                                setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value)); //&(int){1},sizeof(int)
+                                setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value));
+                                
                                 // Connect to the client's listening port
                                 struct sockaddr_in client_address;
                                 client_address.sin_family = AF_INET;
                                 client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
                                 client_address.sin_port = htons(port);
-                                if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                
+                                //NEED THE SERVER TO BIND TO PORT 20
+                                
+                                /*if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("bind error:");
                                     exit(-1);
-                                }
+                                }*/
                                 
 
                                 // connect to the client address and port
