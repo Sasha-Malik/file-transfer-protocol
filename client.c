@@ -13,39 +13,41 @@
 int main()
 {
     //socket
-    int sockfd = socket(AF_INET,SOCK_STREAM,0);
     int server_sd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0 || server_sd < 0){
         perror("socket:");
         exit(-1);
     }
     int i = 0;
-    setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int)); //&(int){1},sizeof(int)
+    setsockopt(server_sd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int)); //&(int){1},sizeof(int)
     struct sockaddr_in server_addr;
     bzero(&server_addr,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(9000);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    char myIP[16];
-    unsigned int myPort;
-    struct sockaddr_in my_addr;
-    bzero(&my_addr, sizeof(my_addr));
-    socklen_t len = sizeof(my_addr);
-    getsockname(sockfd, (struct sockaddr *)&my_addr, &len);
-    inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
-    myPort = ntohs(my_addr.sin_port);
         
     if(connect(server_sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
         perror("connect:");
         exit(-1);
     }
+    
     printf("Connected to server \n");
+    
+    char myIP[16];
+    unsigned int myPort;
+    struct sockaddr_in my_addr;
+    bzero(&my_addr, sizeof(my_addr));
+    socklen_t len = sizeof(my_addr);
+    getsockname(server_sd, (struct sockaddr *)&my_addr, &len);
+    inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
+    myPort = ntohs(my_addr.sin_port);
+    
     char buffer[256];
     char bufferCopy[256];
     char bufferCopy2[256];
     int isAuth = -1;
-    int new_Port, pid, transfersocket, status, client_sockfd, new_dedicated_data_sd;
+    int new_Port, pid, transfersocket, status, client_sockfd;
     while(1){
         char bufferTemp[256];
         bzero(buffer,sizeof(buffer));
@@ -54,7 +56,7 @@ int main()
         char *token;
         token = strtok(bufferTemp, " ");
 
-        if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "PWD") == 0)
+        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "CWD") == 0 || strcmp(token, "QUIT") == 0 || strcmp(token, "PWD") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
@@ -67,12 +69,12 @@ int main()
             }
             printf("%s \n", buffer);
         }
-        else if(strcmp(bufferCopy, "!CWD") == 0){
+        else if(strcmp(token, "!CWD") == 0){
 			bzero(bufferCopy2,sizeof(bufferCopy2));
             fgets(bufferCopy2,sizeof(bufferCopy2),stdin);
 			chdir(bufferCopy2);
 		}
-		else if(strcmp(bufferCopy, "!PWD") == 0){
+		else if(strcmp(token, "!PWD") == 0){
 			bzero(bufferCopy2,sizeof(bufferCopy2));
             getcwd(&bufferCopy2, 256);
 			printf("%s", bufferCopy2);
@@ -92,11 +94,12 @@ int main()
                 perror("send");
                 exit(-1);
             }
-            printf("sent from client");
+            //printf("sent from client");
             bzero(bufferCopy, sizeof(bufferCopy));
             recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
             if(strcmp(bufferCopy, "200 PORT command successful"))
             {
+                printf("%s \n",bufferCopy);
                 printf("buffer : %s \n",buffer);
                 send(server_sd, buffer, sizeof(buffer), 0);
              
@@ -119,7 +122,7 @@ int main()
                         perror("listen error:");
                         exit(-1);
                     }
-                    new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
+                    int new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
                     char bufferSend[256];
                     char toSend[256];
                     char toSend2[256];
@@ -133,8 +136,8 @@ int main()
                         tokenSend = strtok(NULL, " "); // separate the next string
                     }
                    
-                    printf("token :%s \n",token);
-                    printf("toSend2 :%s \n",toSend2);
+                    //printf("token :%s \n",token);
+                    //printf("toSend2 :%s \n",toSend2);
                     
                     if(strcmp(token, "RETR") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
@@ -153,11 +156,13 @@ int main()
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s", buffer);
                     }
+                    
 
+                    close(new_dedicated_data_sd);
                 }
                 else{
-                    // this line is sus, may cause errors.
-                    close(new_dedicated_data_sd);
+                    // parent process
+                    
                 }
                 
             }
