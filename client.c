@@ -50,8 +50,8 @@ int main()
 	int new_Port, pid, transfersocket, status, client_sockfd, new_dedicated_data_sd;
     char* bc;
 	while(1){
-        bzero(buffer,sizeof(buffer));
-        printf("%s", buffer);
+        //bzero(buffer,sizeof(buffer));
+        //bzero(buffer,sizeof(buffer));
 		fgets(buffer,sizeof(buffer),stdin);
         strcpy(bufferCopy,buffer);
         char *token;
@@ -66,7 +66,6 @@ int main()
             if(send(server_sd, buffer, strlen(buffer),0)<0){
                 perror("send");
                 exit(-1);}
-            //printf("sent to server! \n");
             bzero(buffer,sizeof(buffer));
             recv(server_sd,buffer,sizeof(buffer),0);
             if(strcmp(buffer, "230, User logged in, proceed") == 0){

@@ -55,9 +55,15 @@ int main()
 
     printf("Server is listening...\n");
     char buffer[256];
+    char bufferCopy[256];
+    char bufferCopy2[256];
+    char user[256];
+    char pass[256];
     int client_sd;
     int client_sock;
     char space[1] = " ";
+    int userCheck = 0;
+    
     while(1)
     {
         printf("max fd = %d \n",max_fd);
@@ -81,15 +87,6 @@ int main()
                     if(client_sd>max_fd)
                         max_fd = client_sd;
                     
-                    bzero(buffer,sizeof(buffer));
-                    recv(client_sd,buffer,sizeof(buffer),0);
-                    printf("%s", buffer);
-                    
-                    bzero(buffer,sizeof(buffer));
-                    char *message = "230, User logged in, proceed";
-                    if (send(client_sd, message, strlen(message), 0) < 0){
-                        perror("Error: send failed");
-                        exit(EXIT_FAILURE);}
                 }
                 else
                 {
@@ -113,62 +110,157 @@ int main()
                     
                     else
                     {
-                        printf(" MESSAGE FORM CLIENT : %s \n",buffer);
-                        printf("check \n");
-                        char* bc = strtok(buffer, space); // need to implement strtok to get port
-                        int port = atoi(bc);
-                        
-                        int pid = fork(); //fork a child process
-                        if(pid == 0)   //if it is the child process
+
+                        printf("buffer from client : %s \n", buffer);
+                        char *token;
+                        strcpy(bufferCopy,buffer);
+                        token = strtok(bufferCopy, " ");
+                        //printf("token : %s \n", token);
+           
+                        /*if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy2, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "test") == 0)*/
+                        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0)
                         {
-                            close(client_sd);
-                            
-                            if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-                            {
-                                perror("socket failed");
-                                exit(EXIT_FAILURE);
-                            }
+                            //getting strings from buffer
+                            char *token1;
+                            char input[20];
+                            token1 = strtok(buffer, " "); // separate the first string
                            
-                            int value = 1;
-                            setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value)); //&(int){1},sizeof(int)
-                            // Connect to the client's listening port
-                            struct sockaddr_in client_address;
-                            client_address.sin_family = AF_INET;
-                            client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-                            client_address.sin_port = htons(port);
-                            if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
-                                perror("bind error:");
-                                exit(-1);
+                            while (token1 != NULL) {
+                                strcpy(input, token1);
+                                token1 = strtok(NULL, " "); // separate the next string
+                            }
+                            //printf("input : %s \n",input);
+                            
+                            if(strcmp(token, "USER") == 0)
+                            {
+                                 FILE *fp;
+                                 char line[100], *username, *password;
+                                 int found = 0;
+
+
+                                 fp = fopen("users.txt", "r");
+                                 if (fp == NULL) {
+                                     printf("Error opening file.");
+                                     return 1;
+                                 }
+
+                                 while (fgets(line, 100, fp) != NULL) {
+                                     username = strtok(line, ",");
+                                     password = strtok(NULL, ",");
+
+                                     if (strcmp(username, input) == 0) {
+                                         //printf("Username found. Password is %s \n", password);
+                                         strcpy(user, username);
+                                         strcpy(pass,password);
+                                         found = 1;
+                                         break;
+                                     }
+                                 }
+
+                                 if (!found)
+                                 {
+                                     char *message = "530 Not logged in";
+                                     if (send(fd, message, strlen(message), 0) < 0){
+                                         perror("Error: send failed");
+                                         exit(EXIT_FAILURE);}
+                                 }
+                                
+                                 if(found)
+                                 {
+                                     userCheck = 1;
+                                     char *message = "Username OK, need password";
+                                     if (send(fd, message, strlen(message), 0) < 0){
+                                         perror("Error: send failed");
+                                         exit(EXIT_FAILURE);}
+                                 }
+                                     
+
+                                 fclose(fp);
+                                
                             }
                             
-
-                            // connect to the client address and port
-                            if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
-                                perror("Error: connect failed");
-                                exit(EXIT_FAILURE);}
-
-                            // send a message to the client
-                            char *message = "Hello, client!";
-                            if (send(client_sock, message, strlen(message), 0) < 0){
-                                perror("Error: send failed");
-                                exit(EXIT_FAILURE);}
-                            bzero(buffer,sizeof(buffer));
+                            else if(strcmp(token, "PASS") == 0 && userCheck == 1)
+                            {
+                               
+                                if(strcmp(input,pass) == 0)
+                                {
+                                    char *message = "230, User logged in, proceed";
+                                    if (send(fd, message, strlen(message), 0) < 0){
+                                        perror("Error: send failed");
+                                        exit(EXIT_FAILURE);}
+                                }
+                                else
+                                {
+                                    char *message = "530 Not logged in";
+                                    if (send(fd, message, strlen(message), 0) < 0){
+                                        perror("Error: send failed");
+                                        exit(EXIT_FAILURE);}
+                                    
+                                }
+                             
+                            }
                             
-                            recv(client_sock,buffer,sizeof(buffer),0);
-                            printf("%s \n",buffer);
-                            bzero(buffer,sizeof(buffer));
-
-                            // close client socket and exit child process
-                            close(client_sock);
-                            exit(EXIT_SUCCESS);
+                           
                         }
-                        
                         else
                         {
-                            //parent process
-                            close(client_sock);
+                            
+                            int port = 9001;//atoi(bc);
+                            
+                            int pid = fork(); //fork a child process
+                            if(pid == 0)   //if it is the child process
+                            {
+                                close(client_sd);
+                                
+                                if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+                                {
+                                    perror("socket failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                               
+                                int value = 1;
+                                setsockopt(client_sock,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value)); //&(int){1},sizeof(int)
+                                // Connect to the client's listening port
+                                struct sockaddr_in client_address;
+                                client_address.sin_family = AF_INET;
+                                client_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+                                client_address.sin_port = htons(port);
+                                if(bind(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                    perror("bind error:");
+                                    exit(-1);
+                                }
+                                
+
+                                // connect to the client address and port
+                                if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
+                                    perror("Error: connect failed");
+                                    exit(EXIT_FAILURE);}
+
+                                // send a message to the client
+                                char *message = "Hello, client!";
+                                if (send(client_sock, message, strlen(message), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);}
+                                bzero(buffer,sizeof(buffer));
+                                
+                                recv(client_sock,buffer,sizeof(buffer),0);
+                                printf("%s \n",buffer);
+                                bzero(buffer,sizeof(buffer));
+
+                                // close client socket and exit child process
+                                close(client_sock);
+                                exit(EXIT_SUCCESS);
+                            }
+                            
+                            else
+                            {
+                                //parent process
+                                close(client_sock);
+                            }
                         }
                     }
+                        
+              
                     
 
                 }
