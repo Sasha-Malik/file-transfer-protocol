@@ -41,24 +41,32 @@ int main()
 		perror("connect:");
 		exit(-1);
 	}
+    printf("Connected to server \n");
 	char buffer[256];
 	char bufferCopy[256];
 	char bufferCopy2[256];
 	char space[1] = " ";
 	int isAuth = -1;
 	int new_Port, pid, transfersocket, status, client_sockfd, new_dedicated_data_sd;
+    char* bc;
 	while(1){
-        //bzero(buffer,sizeof(buffer));
-        //bzero(buffer,sizeof(buffer));
+        bzero(buffer,sizeof(buffer));
+        printf("%s", buffer);
 		fgets(buffer,sizeof(buffer),stdin);
-		memcpy(bufferCopy, buffer, 4);
-        memcpy(bufferCopy2, buffer, 3);
-		if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy2, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "test") == 0)
+        strcpy(bufferCopy,buffer);
+        char *token;
+        token = strtok(bufferCopy, " ");
+
+		//memcpy(bufferCopy, buffer, 4);
+        //memcpy(bufferCopy2, buffer, 3);
+		/*if(strcmp(bufferCopy, "USER") == 0 || strcmp(bufferCopy, "PASS") == 0 || strcmp(bufferCopy2, "CWD") == 0 || strcmp(bufferCopy, "QUIT") == 0 || strcmp(bufferCopy, "test") == 0)*/
+        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
                 perror("send");
                 exit(-1);}
+            //printf("sent to server! \n");
             bzero(buffer,sizeof(buffer));
             recv(server_sd,buffer,sizeof(buffer),0);
             if(strcmp(buffer, "230, User logged in, proceed") == 0){
@@ -82,6 +90,7 @@ int main()
 			recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
 			if(strcmp(bufferCopy, "200 PORT command successful")){
 				send(server_sd, buffer, sizeof(buffer), 0);
+				token = strtok(buffer, " ");
 				pid = fork();
 				if(pid == 0){
                     close(server_sd);
@@ -102,19 +111,19 @@ int main()
 					}
 					new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
 					bzero(bufferCopy, sizeof(bufferCopy));
-					memcpy(bufferCopy, buffer, 4);
-					if(strcmp(bufferCopy, "RETR") == 0){
+					strncpy(bufferCopy, buffer, 4);
+					if(strcmp(buffer, "RETR") == 0){
 						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
 						printf("%s", buffer);
 					}
-					else if(strcmp(bufferCopy, "STOR") == 0){
-						bc = strtok(bc, space);
-						FILE* fptr = fopen(bc, "r");		
+					else if(strcmp(buffer, "STOR") == 0){
+						char* bc = strtok(NULL, " ");
+						FILE* fptr = fopen(buffer, "r");		
 						char fmsg[1000];
 						fscanf(fptr, "%s", fmsg);
 						send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
 					}
-					else if(strcmp(bufferCopy, "LIST") == 0){
+					else if(strcmp(buffer, "LIST") == 0){
 						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
 						printf("%s", buffer);
 					}
