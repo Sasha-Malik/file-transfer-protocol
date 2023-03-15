@@ -85,6 +85,7 @@ int main()
 				perror("send");
 				exit(-1);
 			}
+			char bufferCopy[256];
 			bzero(bufferCopy, sizeof(bufferCopy));
 			recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
 			if(strcmp(bufferCopy, "200 PORT command successful")){
@@ -111,18 +112,19 @@ int main()
 					new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
 					bzero(bufferCopy, sizeof(bufferCopy));
 					strncpy(bufferCopy, buffer, 4);
-					if(strcmp(buffer, "RETR") == 0){
+					bzero(bufferCopy2, sizeof(bufferCopy2));
+					strcpy(bufferCopy2, &buffer[6]);
+					if(strcmp(bufferCopy, "RETR") == 0){
 						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
 						printf("%s", buffer);
 					}
-					else if(strcmp(buffer, "STOR") == 0){
-						char* bc = strtok(NULL, " ");
-						FILE* fptr = fopen(buffer, "r");		
+					else if(strcmp(bufferCopy, "STOR") == 0){
+						FILE* fptr = fopen(bufferCopy2, "r");		
 						char fmsg[1000];
 						fscanf(fptr, "%s", fmsg);
 						send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
 					}
-					else if(strcmp(buffer, "LIST") == 0){
+					else if(strcmp(bufferCopy, "LIST") == 0){
 						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
 						printf("%s", buffer);
 					}
@@ -295,3 +297,4 @@ int main()
 
     return 0;
 }
+
