@@ -92,49 +92,7 @@ int main()
                 pid = fork();
                 if(pid == 0){
                     close(server_sd);
-<<<<<<< HEAD
-					int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
-					struct sockaddr_in data_server_addr;
-					bzero(&data_server_addr,sizeof(data_server_addr));
-					data_server_addr.sin_family = AF_INET;
-					data_server_addr.sin_port = htons(new_Port);
-					data_server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-					if(bind(transfersocketfd, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
-						perror("bind error:");
-						exit(-1);
-					}
-					status = listen(transfersocketfd, 5);
-					if(status < 0){
-						perror("listen error:");
-						exit(-1);
-					}
-					new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
-					bzero(bufferCopy, sizeof(bufferCopy));
-					strncpy(bufferCopy, buffer, 4);
-					bzero(bufferCopy2, sizeof(bufferCopy2));
-					strcpy(bufferCopy2, &buffer[6]);
-					if(strcmp(bufferCopy, "RETR") == 0){
-						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-						printf("%s", buffer);
-						FILE* fptr = fopen(bufferCopy2, "w");
-						fprintf(fptr, "%s", buffer);
-						fclose(fptr);
-					}
-					else if(strcmp(bufferCopy, "STOR") == 0){
-						FILE* fptr = fopen(bufferCopy2, "r");		
-						char fmsg[1000];
-						fscanf(fptr, "%s", fmsg);
-						send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
-					}
-					else if(strcmp(bufferCopy, "LIST") == 0){
-						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-						printf("%s", buffer);
-					}
-					close(new_dedicated_data_sd);	
-				}
-				else{
-					// this line is sus, may cause errors. 
-=======
+
                     int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
                     struct sockaddr_in data_server_addr;
                     bzero(&data_server_addr,sizeof(data_server_addr));
@@ -170,6 +128,9 @@ int main()
                     if(strcmp(token, "RETR") == 0){
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s", buffer);
+                        FILE* fptr = fopen(toSend2, "w");
+                        fprintf(fptr, "%s", buffer);
+                        fclose(fptr);
                     }
                     else if(strcmp(token, "STOR") == 0){
                         FILE* fptr = fopen(toSend2, "r");
@@ -181,8 +142,7 @@ int main()
                         recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                         printf("%s", buffer);
                     }
->>>>>>> 1da5eb9 (fixed segmentation faults)
-                    close(new_dedicated_data_sd);
+
                 }
                 else{
                     // this line is sus, may cause errors.
