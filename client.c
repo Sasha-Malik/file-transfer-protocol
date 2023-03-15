@@ -25,6 +25,7 @@ int main()
     bzero(&server_addr,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(9000);
+    server_addr.sin_port = htons(9000);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	char myIP[16];
@@ -47,6 +48,7 @@ int main()
 	int isAuth = -1;
 	int new_Port, pid, transfersocket, status, client_sockfd, new_dedicated_data_sd;
 	while(1){
+        //bzero(buffer,sizeof(buffer));
         //bzero(buffer,sizeof(buffer));
 		fgets(buffer,sizeof(buffer),stdin);
 		memcpy(bufferCopy, buffer, 4);
