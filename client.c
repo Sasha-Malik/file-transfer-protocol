@@ -117,6 +117,9 @@ int main()
 					if(strcmp(bufferCopy, "RETR") == 0){
 						recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
 						printf("%s", buffer);
+						FILE* fptr = fopen(bufferCopy2, "w");
+						fprintf(fptr, "%s", buffer);
+						fclose(fptr);
 					}
 					else if(strcmp(bufferCopy, "STOR") == 0){
 						FILE* fptr = fopen(bufferCopy2, "r");		
