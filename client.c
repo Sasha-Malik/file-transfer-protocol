@@ -1,4 +1,3 @@
-
 #include<stdio.h>
 #include<string.h>
 #include<sys/socket.h>
@@ -56,7 +55,7 @@ int main()
         char *token;
         token = strtok(bufferTemp, " ");
 
-        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "CWD") == 0 || strcmp(token, "QUIT") == 0 || strcmp(token, "PWD") == 0)
+        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "CWD") == 0 || strcmp(token, "QUIT") == 0 || strcmp(token, "PWD") == 0 || strcmp(token, "LIST") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
@@ -78,6 +77,13 @@ int main()
 			bzero(bufferCopy2,sizeof(bufferCopy2));
             getcwd(&bufferCopy2, 256);
 			printf("%s", bufferCopy2);
+		}
+		else if(strcmp(token, "!LIST") == 0){
+			FILE* fptr = popen("ls -l", "r");			
+			char l[256];
+			while(fgets(l, 255, fptr)!= NULL){
+				printf("%s\n", l);
+			}
 		}
         else
         {
@@ -327,4 +333,3 @@ int main()
 
     return 0;
 }
-
