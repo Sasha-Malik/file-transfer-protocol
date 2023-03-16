@@ -127,7 +127,7 @@ int main()
             {
                 i++;
                 new_Port = myPort + i;
-                //printf("%d",new_Port);
+                printf("port:%d \n",new_Port);
                 int ipInt = atoi("127.0.0.1");
                 int d = (ipInt << 0) & 0xff;
                 int c = (ipInt << 8) & 0xff;

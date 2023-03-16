@@ -65,6 +65,7 @@ int main()
     int isAuth = 0;
     int auth[100];
     char newPort[256];
+    int portC = 0;
     
     while(1)
     {
@@ -218,6 +219,22 @@ int main()
                             //printf("input : %s \n",input); //contains the new port
                             
                             strcpy(newPort,input);
+                            char *tok;
+                            int i = 0, nums[6];
+
+                            tok = strtok(newPort, ",");
+                            while (tok != NULL && i < 6) {
+                                nums[i] = atoi(tok);
+                                tok = strtok(NULL, ",");
+                                i++;
+                            }
+                            
+                            int p1 = nums[4];
+                            int p2 = nums[5];
+                            portC = (p1 * 256) + p2;
+                            
+                            int result = (nums[0] << 24) | (nums[1] << 16) | (nums[2] << 8) | nums[3];
+                            printf("Result: %d\n", result);
                             
                             char *message = "200 PORT command successful.";
                             if (send(fd, message, strlen(message), 0) < 0){
@@ -237,7 +254,7 @@ int main()
                             input[strcspn(input, "\n")] = 0;
                             //printf("input : %s \n",input); //contains the file name
                             
-                            int port = atoi(newPort);
+                            int port = portC;//atoi(newPort);
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
