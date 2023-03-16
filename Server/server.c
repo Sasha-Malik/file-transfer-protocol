@@ -63,6 +63,7 @@ int main()
     char space[1] = " ";
     int userCheck = 0;
     int isAuth = 0;
+    int auth[100];
     char newPort[256];
     
     while(1)
@@ -80,6 +81,8 @@ int main()
         {
             if(FD_ISSET(fd,&read_fdset))
             {
+                isAuth = auth[fd];
+                
                 if(fd==server_sd)
                 {
                     client_sd = accept(server_sd,0,0);
@@ -98,12 +101,13 @@ int main()
                         printf("connection closed from client side \n");
                         close(fd);
                         FD_CLR(fd,&full_fdset);
+                        auth[fd] = 0;
                         if(fd==max_fd)
                         {
                             for(int i=max_fd; i>=3; i--)
                                 if(FD_ISSET(i,&full_fdset))
                                 {
-                                    max_fd =  i;
+                                    max_fd = i;
                                     break;
                                 }
                         }
@@ -183,6 +187,7 @@ int main()
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
                                     isAuth = 1;
+                                    auth[fd] = 1;
                                     bzero(pass, sizeof(pass));
                                 }
                                 else
