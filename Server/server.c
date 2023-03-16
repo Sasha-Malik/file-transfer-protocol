@@ -66,6 +66,7 @@ int main()
     int auth[100];
     char newPort[256];
     int portC = 0;
+    char myIP[30];
     
     while(1)
     {
@@ -205,8 +206,7 @@ int main()
                         
                         else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
-                            printf("%s", bufferCopy);
-                            //FIRST HANDLE PORT COMMAND
+                            printf("buffer copy : %s\n", bufferCopy);
                             
                             //getting strings from original buffer
                             char *token1;
@@ -216,7 +216,6 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
-                            //printf("input : %s \n",input); //contains the new port
                             
                             strcpy(newPort,input);
                             char *tok;
@@ -233,8 +232,10 @@ int main()
                             int p2 = nums[5];
                             portC = (p1 * 256) + p2;
                             
-                            int result = (nums[0] << 24) | (nums[1] << 16) | (nums[2] << 8) | nums[3];
-                            printf("Result: %d\n", result);
+                            sprintf(myIP, "%d", nums[0]);
+                               for (i = 1; i < 4; i++) {
+                                   sprintf(myIP + strlen(myIP), ".%d", nums[i]);
+                               }
                             
                             char *message = "200 PORT command successful.";
                             if (send(fd, message, strlen(message), 0) < 0){
