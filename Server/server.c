@@ -384,7 +384,7 @@ int main()
                         else if (isAuth == 1)
                         {
                             printf(": %d \n",isAuth);
-                            char* message = "503 Bad sequence of commands.";
+                            char* message = "202 Command not implemented.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
                                 exit(EXIT_FAILURE);}
