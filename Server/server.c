@@ -64,7 +64,7 @@ int main()
     int client_sock;
     char space[1] = " ";
     int userCheck = 0;
-    int auth = 0;
+    int isAuth = 0;
     char newPort[256];
     
     while(1)
@@ -183,7 +183,7 @@ int main()
                                     if (send(fd, message, strlen(message), 0) < 0){
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
-                                    auth = 1;
+                                    isAuth = 1;
                                 }
                                 else
                                 {
@@ -195,7 +195,8 @@ int main()
                             }
                             
                         }
-                        else if(strcmp(token,"PORT") == 0)
+                        
+                        else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
                             //FIRST HANDLE PORT COMMAND
                             
@@ -216,7 +217,7 @@ int main()
                                 perror("Error: send failed");
                                 exit(EXIT_FAILURE);}
                         }
-                        else if(strcmp(token,"RETR") == 0)
+                        else if(strcmp(token,"RETR") == 0 && isAuth == 1)
                         {
                             //getting strings from original buffer
                             char *token1;
@@ -257,9 +258,9 @@ int main()
                                 
                                 //NEED THE SERVER TO BIND TO PORT 9020
                                 if(bind(client_sock, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
-                                 perror("bind error:");
-                                 exit(-1);
-                                 }
+                                    perror("bind error:");
+                                    exit(-1);
+                                }
                                 
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
@@ -272,17 +273,20 @@ int main()
                                     exit(EXIT_FAILURE);}
                                 
                                 FILE* fptr = fopen(input, "r");
-                                char message[256];
-                                fscanf(fptr, "%s", message);
+                                char fmsg[1024];
                                 
-                                //bzero(success, sizeof(success));
+                                while (fgets(fmsg, sizeof(fmsg), fptr))
+                                {
+                                    send(client_sock, fmsg, sizeof(fmsg), 0);
+                                    bzero(fmsg, sizeof(fmsg));
+                                }
+                                fclose(fptr);
+                                send(client_sock, fmsg, sizeof(fmsg), 0);
+                                
                                 success = "226 Transfer completed.";
-                                
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
-                                
-                                //printf("done");
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
@@ -290,7 +294,7 @@ int main()
                             }
                             
                         }
-                        else if(strcmp(token,"STOR") == 0)
+                        else if(strcmp(token,"STOR") == 0 && isAuth == 1)
                         {
                             
                             //getting strings from original buffer
@@ -303,7 +307,6 @@ int main()
                             }
                             
                             input[strcspn(input, "\n")] = 0;
-                            //printf("input : %s \n",input); //contains the file name
                             
                             int port = atoi(newPort);
                             
@@ -333,9 +336,9 @@ int main()
                                 
                                 //NEED THE SERVER TO BIND TO PORT 9020
                                 if(bind(client_sock, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
-                                 perror("bind error:");
-                                 exit(-1);
-                                 }
+                                    perror("bind error:");
+                                    exit(-1);
+                                }
                                 
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
@@ -351,16 +354,14 @@ int main()
                                 fclose(fp);
                                 
                                 FILE *fptr = fopen(input, "a");
-                            
+                                
                                 char fmsg[1024];
                                 while(1)
                                 {
                                     int b = recv(client_sock,fmsg, sizeof(fmsg), 0);
-                                    if(strcmp(fmsg,"") == 0)
-                                    {
-                                        break;
-                                    }
-                                        
+                                    if(strcmp(fmsg,"") == 0){
+                                        break;}
+                                    
                                     //printf("message : %s \n", fmsg);
                                     fprintf(fptr, "%s", fmsg);
                                     bzero(fmsg, sizeof(fmsg));
@@ -368,7 +369,7 @@ int main()
                                 
                                 fclose(fptr);
                                 success = "226 Transfer completed.";
-                       
+                                
                                 if(send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
@@ -378,16 +379,30 @@ int main()
                                 exit(EXIT_SUCCESS);
                             }
                             
-                         }//else if stor
+                        }//else if stor
+                        else if (isAuth == 1)
+                        {
+                            char* message = "503 Bad sequence of commands.";
+                            if(send(fd, message, strlen(message), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);}
+                        }
+                        else
+                        {
+                            char* message = "530 Not logged in.";
+                            if(send(fd, message, strlen(message), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);}
+                        }
                     } //else
                 }//another else
             }//if
             
         }//for
         
-      }//while
-        
-        //close
+    }//while
+    
+    //close
     close(server_sd);
     return 0;
 }//int main
