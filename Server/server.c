@@ -204,7 +204,7 @@ int main()
                         
                         else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
-                            printf(bufferCopy);
+                            printf("%s", bufferCopy);
                             //FIRST HANDLE PORT COMMAND
                             
                             //getting strings from original buffer
@@ -280,6 +280,15 @@ int main()
                                     exit(EXIT_FAILURE);}
                                 
                                 FILE* fptr = fopen(input, "r");
+                                if(fptr == NULL){
+                                    char* error = "550 No such File or Directory.";
+                                    if (send(client_sock, error, strlen(error), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                    }
+                                    perror(error);
+                                    exit(-1);
+                                }
                                 char fmsg[1024];
                                 
                                 while (fgets(fmsg, sizeof(fmsg), fptr))

@@ -173,6 +173,11 @@ int main()
                             printf("%s \n", buffer);
                             
                             FILE* fptr = fopen(toSend2, "r");
+                            if(fptr == NULL){
+                                perror("File Not Found:");
+                                exit(-1);
+                            }
+
                             char fmsg[1024];
                             
                             while (fgets(fmsg, 1024, fptr) != NULL) {
