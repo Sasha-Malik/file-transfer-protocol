@@ -1,4 +1,3 @@
-
 //============================================================================
 // Name         : Chat Server using Select()
 // Description  : This Program will receive messages from several clients using
@@ -65,6 +64,7 @@ int main()
     int isAuth = 0;
     int auth[100];
     char newPort[256];
+    int portC = 0;
     
     while(1)
     {
@@ -201,7 +201,54 @@ int main()
                             }
                             
                         }
-                        
+                         else if(strcmp(token, "CWD") == 0 && isAuth == 1){
+                            char input[256];
+                            while (token != NULL) {
+                                strcpy(input, token);
+                                token = strtok(NULL, " "); // separate the next string
+                            }
+                            input[strcspn(input, "\n")] = 0;
+                            if(chdir(input) < 0){
+                                char* errorMessage = "Invalid directory:";
+                                if (send(fd, errorMessage, strlen(errorMessage), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                                perror(errorMessage);
+                                exit(-1);
+                            }
+                            char successMessage[256];
+                            sprintf(successMessage, "%s", "200 directory changed to ");
+                            sprintf(successMessage, "%s", input);
+                            if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                            }
+                        }
+                        else if(strcmp(token, "PWD") == 0 && isAuth == 1){
+                            char input[256];
+                            getcwd(input, 256); // removed &
+                            printf("%s \n", input);
+                            char successMessage[512];
+                            sprintf(successMessage, "%s", "257 ");
+                            sprintf(successMessage, "%s\n", input);
+                            if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                            }
+                        }
+                        else if(strcmp(token, "LIST") == 0 && isAuth == 1){
+                            FILE* fptr = popen("ls -l", "r");
+                            char l[1024];
+                            bzero(l, sizeof(l));
+                            while(fgets(l, sizeof(l), fptr)){
+                            	  printf("%s", l);
+                                 send(fd, l, sizeof(l), 0);
+                                 bzero(l, sizeof(l));
+                            }
+                            fclose(fptr);
+                            send(fd, l, sizeof(l), 0);
+                        }
                         else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
                             printf("%s", bufferCopy);
@@ -218,6 +265,22 @@ int main()
                             //printf("input : %s \n",input); //contains the new port
                             
                             strcpy(newPort,input);
+                            char *tok;
+                            int i = 0, nums[6];
+
+                            tok = strtok(newPort, ",");
+                            while (tok != NULL && i < 6) {
+                                nums[i] = atoi(tok);
+                                tok = strtok(NULL, ",");
+                                i++;
+                            }
+                            
+                            int p1 = nums[4];
+                            int p2 = nums[5];
+                            portC = (p1 * 256) + p2;
+                            
+                            int result = (nums[0] << 24) | (nums[1] << 16) | (nums[2] << 8) | nums[3];
+                            printf("Result: %d\n", result);
                             
                             char *message = "200 PORT command successful.";
                             if (send(fd, message, strlen(message), 0) < 0){
@@ -237,7 +300,7 @@ int main()
                             input[strcspn(input, "\n")] = 0;
                             //printf("input : %s \n",input); //contains the file name
                             
-                            int port = atoi(newPort);
+                            int port = portC;//atoi(newPort);
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
@@ -424,4 +487,3 @@ int main()
     close(server_sd);
     return 0;
 }//int main
-
