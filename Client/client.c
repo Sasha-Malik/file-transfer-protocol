@@ -51,6 +51,7 @@ int main()
     char buffer[256];
     char bufferCopy[256];
     char bufferCopy2[256];
+    char bufferCopy3[256];
     int isAuth = -1;
     int pid, transfersocket, status;
     unsigned int new_Port;
@@ -89,7 +90,10 @@ int main()
                     token = strtok(NULL, " "); // separate the next string
                 }
                 input[strcspn(input, "\n")] = 0;
-                chdir(input);
+                if(chdir(input) < 0){
+                    perror("Invalid directory:");
+                    exit(-1);
+                }
             }
             else if(strcmp(tokenTemp, "!PWD") == 0){
                 char input[256];
@@ -104,13 +108,19 @@ int main()
                 }
             }
             else if(strcmp(token, "CWD") == 0){
-                
+                bzero(bufferCopy3, sizeof(bufferCopy3));
+                recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                printf("%s", bufferCopy3);
             }
             else if(strcmp(token, "PWD") == 0){
-                
+                bzero(bufferCopy3, sizeof(bufferCopy3));
+                recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                printf("%s", bufferCopy3);
             }
             else if(strcmp(token, "LIST") == 0){
-                
+                bzero(bufferCopy3, sizeof(bufferCopy3));
+                recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                printf("%s", bufferCopy3);
             }
             
             else if (strcmp(token, "STOR") == 0 ||strcmp(token, "RETR") == 0 )
