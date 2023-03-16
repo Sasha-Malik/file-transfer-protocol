@@ -191,6 +191,7 @@ int main()
                                     if (send(fd, message, strlen(message), 0) < 0){
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
+                                    isAuth = 0;
                                 }
                             }
                             
@@ -382,6 +383,7 @@ int main()
                         }//else if stor
                         else if (isAuth == 1)
                         {
+                            printf(": %d \n",isAuth);
                             char* message = "503 Bad sequence of commands.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
@@ -389,6 +391,7 @@ int main()
                         }
                         else
                         {
+                            printf(": %d \n",isAuth);
                             char* message = "530 Not logged in.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");

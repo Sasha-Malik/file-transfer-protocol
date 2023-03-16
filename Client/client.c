@@ -50,6 +50,10 @@ int main()
         char *token;
         token = strtok(bufferTemp, " ");
         
+        char tokenTemp[256];
+        strcpy(tokenTemp,token);
+        tokenTemp[strcspn(tokenTemp, "\n")] = 0;
+        
         if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "QUIT") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
@@ -66,16 +70,19 @@ int main()
         
         else if(isAuth == 1)
         {
-            
             if(strcmp(token, "!CWD") == 0){
-                bzero(bufferCopy2,sizeof(bufferCopy2));
-                fgets(bufferCopy2,sizeof(bufferCopy2),stdin);
-                chdir(bufferCopy2);
+                char input[256];
+                while (token != NULL) {
+                    strcpy(input, token);
+                    token = strtok(NULL, " "); // separate the next string
+                }
+                input[strcspn(input, "\n")] = 0;
+                chdir(input);
             }
-            else if(strcmp(token, "!PWD") == 0){
-                bzero(bufferCopy2,sizeof(bufferCopy2));
-                getcwd(bufferCopy2, 256); // removed &
-                printf("%s \n", bufferCopy2);
+            else if(strcmp(tokenTemp, "!PWD") == 0){
+                char input[256];
+                getcwd(input, 256); // removed &
+                printf("%s \n", input);
             }
             else if(strcmp(token, "!LIST") == 0){
                 FILE* fptr = popen("ls -l", "r");
@@ -115,7 +122,6 @@ int main()
                 if(strcmp(bufferCopy, "200 PORT command successful"))
                 {
                     printf("%s \n",bufferCopy);
-                    //printf("buffer : %s \n",buffer);
                     send(server_sd, buffer, sizeof(buffer), 0);
                     
                     pid = fork();
@@ -218,7 +224,7 @@ int main()
             
             else //Wrong command
             {
-                buffer[strcspn(buffer, "\n")] = 0;
+                //buffer[strcspn(buffer, "\n")] = 0;
                 if(send(server_sd, buffer, strlen(buffer),0)<0){
                     perror("send");
                     exit(-1);}
@@ -231,7 +237,7 @@ int main()
         
         else
         {
-            buffer[strcspn(buffer, "\n")] = 0;
+            //buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
                 perror("send");
                 exit(-1);}
