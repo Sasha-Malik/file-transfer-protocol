@@ -199,6 +199,7 @@ int main()
                         
                         else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
+                            printf(bufferCopy);
                             //FIRST HANDLE PORT COMMAND
                             
                             //getting strings from original buffer

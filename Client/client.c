@@ -6,6 +6,17 @@
 #include<unistd.h>
 #include<stdlib.h>
 
+
+static int port(int h1, int h2, int h3, int h4, int p1, int p2, int server_sd){
+    char msg[256];
+    sprintf(msg, "PORT %d,%d,%d,%d,%d,%d", h1, h2, h3, h4, p1, p2);
+    if(send(server_sd, msg, strlen(msg), 0) < 0){
+        perror("send");
+        exit(-1);
+    }
+    return 0;
+}
+
 int main()
 {
     //socket
@@ -41,7 +52,8 @@ int main()
     char bufferCopy[256];
     char bufferCopy2[256];
     int isAuth = -1;
-    int new_Port, pid, transfersocket, status;
+    int pid, transfersocket, status;
+    unsigned int new_Port;
     while(1){
         char bufferTemp[256];
         bzero(buffer,sizeof(buffer));
@@ -106,16 +118,15 @@ int main()
                 i++;
                 new_Port = myPort + i;
                 //printf("%d",new_Port);
-                char msg[256] = "PORT 127.0.0.1";
-                char* sp = " ";
-                strcat(msg, sp);
-                char nP[256];
-                sprintf(nP, "%d", new_Port);
-                strcat(msg, nP);
-                if(send(server_sd, msg, strlen(msg), 0) < 0){
-                    perror("send");
-                    exit(-1);
-                }
+                int ipInt = atoi("127.0.0.1");
+                int d = (ipInt << 0) & 0xff;
+                int c = (ipInt << 8) & 0xff;
+                int b = (ipInt << 16) & 0xff;
+                int a = (ipInt << 24) & 0xff;
+                int f = (new_Port << 0) & 0xff;
+                int e = (new_Port << 8) & 0xff;
+
+                port(a, b, c, d, e, f, server_sd);
                 
                 bzero(bufferCopy, sizeof(bufferCopy));
                 recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
