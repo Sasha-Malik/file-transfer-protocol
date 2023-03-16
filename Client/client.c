@@ -69,7 +69,7 @@ int main()
         char tokenTemp[256];
         strcpy(tokenTemp,token);
         tokenTemp[strcspn(tokenTemp, "\n")] = 0;
-        
+        token[strcspn(token, "\n")] = 0;
         if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "QUIT") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
@@ -112,20 +112,44 @@ int main()
             }
             else if(strcmp(token, "CWD") == 0){
                 bzero(bufferCopy3, sizeof(bufferCopy3));
+                tokenTemp[strcspn(tokenTemp, "\n")] = 0;
+                strcpy(bufferCopy3, tokenTemp);
+                send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                bzero(bufferCopy3, sizeof(bufferCopy3));
                 recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s", bufferCopy3);
+                printf("%s\n", bufferCopy3);
             }
             else if(strcmp(token, "PWD") == 0){
                 bzero(bufferCopy3, sizeof(bufferCopy3));
+                token[strcspn(token, "\n")] = 0;
+                strcpy(bufferCopy3, token);
+                send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                bzero(bufferCopy3, sizeof(bufferCopy3));
                 recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s", bufferCopy3);
+                printf("%s\n", bufferCopy3);
             }
             else if(strcmp(token, "LIST") == 0){
                 bzero(bufferCopy3, sizeof(bufferCopy3));
+                bufferCopy3[strcspn(bufferCopy3, "\n")] = 0;
+                token[strcspn(token, "\n")] = 0;
+                strcpy(bufferCopy3, token);
+                send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                bzero(bufferCopy3, sizeof(bufferCopy3));
+                while(1)
+                {
+		            int b = recv(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
+		            if(strcmp(bufferCopy3,"") == 0){
+		                break;}
+		            
+		            //printf("message : %s \n", fmsg);
+		            printf("%s", bufferCopy3);
+		            bzero(bufferCopy3, sizeof(bufferCopy3));
+            	}
+                
+                
                 recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s", bufferCopy3);
+                printf("%s\n", bufferCopy3);
             }
-            
             else if (strcmp(token, "STOR") == 0 ||strcmp(token, "RETR") == 0 )
             {
                 i++;

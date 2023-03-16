@@ -1,4 +1,3 @@
-
 //============================================================================
 // Name         : Chat Server using Select()
 // Description  : This Program will receive messages from several clients using
@@ -203,7 +202,54 @@ int main()
                             }
                             
                         }
-                        
+                         else if(strcmp(token, "CWD") == 0 && isAuth == 1){
+                            char input[256];
+                            while (token != NULL) {
+                                strcpy(input, token);
+                                token = strtok(NULL, " "); // separate the next string
+                            }
+                            input[strcspn(input, "\n")] = 0;
+                            if(chdir(input) < 0){
+                                char* errorMessage = "Invalid directory:";
+                                if (send(fd, errorMessage, strlen(errorMessage), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                                perror(errorMessage);
+                                exit(-1);
+                            }
+                            char successMessage[256];
+                            sprintf(successMessage, "%s", "200 directory changed to ");
+                            sprintf(successMessage, "%s", input);
+                            if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                            }
+                        }
+                        else if(strcmp(token, "PWD") == 0 && isAuth == 1){
+                            char input[256];
+                            getcwd(input, 256); // removed &
+                            printf("%s \n", input);
+                            char successMessage[512];
+                            sprintf(successMessage, "%s", "257 ");
+                            sprintf(successMessage, "%s\n", input);
+                            if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                            }
+                        }
+                        else if(strcmp(token, "LIST") == 0 && isAuth == 1){
+                            FILE* fptr = popen("ls -l", "r");
+                            char l[1024];
+                            bzero(l, sizeof(l));
+                            while(fgets(l, sizeof(l), fptr)){
+                            	  printf("%s", l);
+                                 send(fd, l, sizeof(l), 0);
+                                 bzero(l, sizeof(l));
+                            }
+                            fclose(fptr);
+                            send(fd, l, sizeof(l), 0);
+                        }
                         else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
                             printf("buffer copy : %s\n", bufferCopy);
@@ -442,4 +488,3 @@ int main()
     close(server_sd);
     return 0;
 }//int main
-
