@@ -123,8 +123,8 @@ int main()
                 int c = (ipInt << 8) & 0xff;
                 int b = (ipInt << 16) & 0xff;
                 int a = (ipInt << 24) & 0xff;
-                int f = (new_Port << 0) & 0xff;
-                int e = (new_Port << 8) & 0xff;
+                int f = new_Port%256;
+                int e = new_Port/256;
 
                 port(a, b, c, d, e, f, server_sd);
                 
