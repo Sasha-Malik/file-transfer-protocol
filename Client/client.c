@@ -3,7 +3,6 @@
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include <netinet/in.h>
-
 #include<unistd.h>
 #include<stdlib.h>
 
@@ -20,7 +19,7 @@ int main()
     struct sockaddr_in server_addr;
     bzero(&server_addr,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(9000);
+    server_addr.sin_port = htons(9021);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     
     if(connect(server_sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
@@ -51,7 +50,7 @@ int main()
         char *token;
         token = strtok(bufferTemp, " ");
         
-        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "CWD") == 0 || strcmp(token, "QUIT") == 0 || strcmp(token, "PWD") == 0 || strcmp(token, "LIST") == 0)
+        if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "QUIT") == 0)
         {
             buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
@@ -84,6 +83,15 @@ int main()
                 while(fgets(l, 255, fptr)!= NULL){
                     printf("%s\n", l);
                 }
+            }
+            else if(strcmp(token, "CWD") == 0){
+                
+            }
+            else if(strcmp(token, "PWD") == 0){
+                
+            }
+            else if(strcmp(token, "LIST") == 0){
+                
             }
             
             else if (strcmp(token, "STOR") == 0 ||strcmp(token, "RETR") == 0 )

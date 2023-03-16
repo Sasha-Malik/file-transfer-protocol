@@ -29,7 +29,7 @@ int main()
     struct sockaddr_in server_addr;
     bzero(&server_addr,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(9000);
+    server_addr.sin_port = htons(9021);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); //INADDR_ANY, INADDR_LOOP
     
     //bind
@@ -57,8 +57,6 @@ int main()
     printf("Server is listening...\n");
     char buffer[256];
     char bufferCopy[256];
-    char bufferCopy2[256];
-    char user[256];
     char pass[256];
     int client_sd;
     int client_sock;
@@ -130,12 +128,11 @@ int main()
                                 strcpy(input, token1);
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
-                            //printf("input : %s \n",input);
                             
                             if(strcmp(token, "USER") == 0)
                             {
                                 FILE *fp;
-                                char line[100], *username, *password;
+                                char line[256], *username, *password;
                                 int found = 0;
                                 
                                 fp = fopen("users.txt", "r");
@@ -144,13 +141,13 @@ int main()
                                     return 1;
                                 }
                                 
-                                while (fgets(line, 100, fp) != NULL) {
+                                while (fgets(line, 256, fp) != NULL) {
                                     username = strtok(line, ",");
                                     password = strtok(NULL, ",");
                                     
                                     if (strcmp(username, input) == 0) {
-                                        strcpy(user, username);
                                         strcpy(pass,password);
+                                        pass[strcspn(pass, "\n")] = 0;
                                         found = 1;
                                         break;}
                                 }
@@ -174,16 +171,19 @@ int main()
                                 fclose(fp);
                             }
                             
-                            else if(strcmp(token, "PASS") == 0 && userCheck == 1)
+                            else if(strcmp(token, "PASS") == 0 )
                             {
+                                //printf("input: %s \n",input);
+                                //printf("pass: %s \n",input);
                                 
-                                if(strcmp(input,pass) == 0)
+                                if(strcmp(input,pass) == 0 && userCheck == 1)
                                 {
                                     char *message = "230, User logged in, proceed";
                                     if (send(fd, message, strlen(message), 0) < 0){
                                         perror("Error: send failed");
                                         exit(EXIT_FAILURE);}
                                     isAuth = 1;
+                                    bzero(pass, sizeof(pass));
                                 }
                                 else
                                 {
