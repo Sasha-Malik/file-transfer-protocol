@@ -53,28 +53,28 @@ int main()
     
     char buffer[256];
     char bufferCopy[256];
- 
+    
     char bufferCopy3[256];
     int isAuth = -1;
     int pid, transfersocket, status;
     unsigned int new_Port;
     while(1){
         char bufferTemp[256];
-       
+        
         bzero(buffer,sizeof(buffer));
-
+        
         fgets(buffer,sizeof(buffer),stdin);
-
+        
         if(strcmp(buffer,"\n") == 0){
         }
         else
             buffer[strcspn(buffer, "\n")] = 0;
-
+        
         strcpy(bufferTemp,buffer);
         char *token;
-
+        
         token = strtok(bufferTemp, " ");
-
+        
         char tokenTemp[256];
         strcpy(tokenTemp,token);
         tokenTemp[strcspn(tokenTemp, "\n")] = 0;
@@ -121,44 +121,40 @@ int main()
                 }
             }
             else if(strcmp(token, "CWD") == 0){
-                bzero(bufferCopy3, sizeof(bufferCopy3));
-                //tokenTemp[strcspn(tokenTemp, "\n")] = 0;
-                strcpy(bufferCopy3, tokenTemp);
-                send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                bzero(bufferCopy3, sizeof(bufferCopy3));
-                recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s \n", bufferCopy3);
+                if(send(server_sd, buffer, strlen(buffer),0)<0){
+                    perror("send");
+                    exit(-1);}
+                bzero(buffer, sizeof(buffer));
+                recv(server_sd, buffer, sizeof(buffer), 0);
+                printf("%s \n", buffer);
+                bzero(buffer, sizeof(buffer));
             }
             else if(strcmp(token, "PWD") == 0){
-                bzero(bufferCopy3, sizeof(bufferCopy3));
-                //token[strcspn(token, "\n")] = 0;
-                strcpy(bufferCopy3, token);
-                send(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
-                bzero(bufferCopy3, sizeof(bufferCopy3));
-                recv(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s \n", bufferCopy3);
+                if(send(server_sd, buffer, strlen(buffer),0)<0){
+                    perror("send");
+                    exit(-1);}
+                bzero(buffer, sizeof(buffer));
+                recv(server_sd, buffer, sizeof(buffer), 0);
+                printf("%s \n", buffer);
+                bzero(buffer, sizeof(buffer));
             }
             else if(strcmp(token, "LIST") == 0){
-                bzero(bufferCopy3, sizeof(bufferCopy3));
-                //bufferCopy3[strcspn(bufferCopy3, "\n")] = 0;
-                //token[strcspn(token, "\n")] = 0;
-                strcpy(bufferCopy3, token);
-                send(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
-                bzero(bufferCopy3, sizeof(bufferCopy3));
+                if(send(server_sd, buffer, strlen(buffer),0)<0){
+                    perror("send");
+                    exit(-1);}
+                
+                char l[1024];
                 while(1)
                 {
-		            int b = recv(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
-		            if(strcmp(bufferCopy3,"") == 0){
-		                break;}
-		            
-		            //printf("message : %s \n", fmsg);
-		            printf("%s", bufferCopy3);
-		            bzero(bufferCopy3, sizeof(bufferCopy3));
-            	}
-                
-                
-                recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s\n", bufferCopy3);
+                    int b = recv(server_sd, l, sizeof(l), 0);
+                    if(strcmp(l,"") == 0){
+                        break;}
+                    if(b<= 0)
+                        break;
+                    
+                    printf("%s", l);
+                    bzero(l, sizeof(l));
+                }
             }
             else if (strcmp(token, "STOR") == 0 ||strcmp(token, "RETR") == 0 )
             {
@@ -166,11 +162,11 @@ int main()
                 new_Port = myPort + i;
                 printf("port:%d \n",new_Port);
                 /*int ipInt = atoi("127.0.0.1");
-                
-                int d = (ipInt << 0) & 0xff;
-                int c = (ipInt << 8) & 0xff;
-                int b = (ipInt << 16) & 0xff;
-                int a = (ipInt << 24) & 0xff;*/
+                 
+                 int d = (ipInt << 0) & 0xff;
+                 int c = (ipInt << 8) & 0xff;
+                 int b = (ipInt << 16) & 0xff;
+                 int a = (ipInt << 24) & 0xff;*/
                 int h1 = myIP[0], h2 = myIP[1], h3 = myIP[2], h4 = myIP[3];
                 int p1 = new_Port/256;
                 int p2 = new_Port%256;
@@ -181,7 +177,7 @@ int main()
                     perror("send");
                     exit(-1);
                 }
-
+                
                 //port(a, b, c, d, e, f, server_sd);
                 
                 bzero(bufferCopy, sizeof(bufferCopy));
@@ -190,6 +186,10 @@ int main()
                 {
                     printf("%s \n",bufferCopy);
                     send(server_sd, buffer, sizeof(buffer), 0);
+                    
+                    bzero(bufferCopy, sizeof(bufferCopy));
+                    recv(server_sd, bufferCopy, sizeof(bufferCopy), 0);
+                    //printf("buffer copy: %s \n", bufferCopy);
                     
                     pid = fork();
                     if(pid == 0){
@@ -221,61 +221,67 @@ int main()
                             strcpy(toSend2, tokenSend);
                             tokenSend = strtok(NULL, " "); // separate the next string
                         }
-                        //toSend2[strcspn(toSend2, "\n")] = 0;
-                        
+                        //printf("token : .%s. \n",token);
                         if(strcmp(token, "STOR") == 0){
-                            bzero(buffer, sizeof(buffer));
-                            recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                            printf("%s \n", buffer);
                             
+                            toSend2[strcspn(toSend2, "\n")] = 0;
+                            printf(".%s.\n",toSend2);
                             FILE* fptr = fopen(toSend2, "r");
                             if(fptr == NULL){
-                                perror("File Not Found:");
-                                exit(-1);
+                                printf("550 No such file or directory. \n");
                             }
-
-                            char fmsg[1024];
-                            
-                            while (fgets(fmsg, 1024, fptr) != NULL) {
-                                //printf("%s \n", fmsg);
+                            else{
+                                
+                                /*bzero(buffer, sizeof(buffer));
+                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);*/
+                                printf("%s \n", bufferCopy);
+                                
+                                
+                                char fmsg[1024];
+                                while (fgets(fmsg, 1024, fptr) != NULL) {
+                                    //printf("%s \n", fmsg);
+                                    send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
+                                    bzero(fmsg, sizeof(fmsg));
+                                }
+                                
+                                fclose(fptr);
+                                
                                 send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
-                                bzero(fmsg, sizeof(fmsg));
+                                bzero(buffer, sizeof(buffer));
+                                recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
+                                printf("%s \n", buffer);
                             }
                             
-                            fclose(fptr);
-                            
-                            send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
-                            bzero(buffer, sizeof(buffer));
-                            recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                            printf("%s \n", buffer);
                         }
                         else if(strcmp(token, "RETR") == 0){
-                            bzero(buffer, sizeof(buffer));
-                            recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                            printf("%s \n", buffer);
+                            /*bzero(buffer, sizeof(buffer));
+                             recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);*/
+                            printf("%s \n", bufferCopy);
                             
-                            FILE *fp = fopen(toSend2, "w");
-                            fclose(fp);
-                            
-                            FILE* fptr = fopen(toSend2, "a");
-                            char fmsg[1024];
-                            while(1)
+                            if(strcmp(bufferCopy,"550 No such File or Directory.") != 0)
                             {
-                                int b = recv(new_dedicated_data_sd,fmsg, sizeof(fmsg), 0);
-                                if(strcmp(fmsg,"") == 0){break;}
+                                FILE *fp = fopen(toSend2, "w");
+                                fclose(fp);
                                 
-                                if(b <= 0){
-                                    break;}
+                                FILE* fptr = fopen(toSend2, "a");
+                                char fmsg[1024];
+                                while(1)
+                                {
+                                    int b = recv(new_dedicated_data_sd,fmsg, sizeof(fmsg), 0);
+                                    if(strcmp(fmsg,"") == 0){break;}
+                                    
+                                    if(b <= 0){
+                                        break;}
+                                    
+                                    fprintf(fptr, "%s", fmsg);
+                                    bzero(fmsg, sizeof(fmsg));
+                                }
+                                fclose(fptr);
                                 
-                                //printf("message : %s \n", fmsg);
-                                fprintf(fptr, "%s", fmsg);
-                                bzero(fmsg, sizeof(fmsg));
+                                bzero(buffer, sizeof(buffer));
+                                recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
+                                printf("%s \n", buffer);
                             }
-                            fclose(fptr);
-                            
-                            bzero(buffer, sizeof(buffer));
-                            recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
-                            printf("%s \n", buffer);
                         }
                         
                         else if(strcmp(token, "LIST") == 0){
@@ -296,7 +302,6 @@ int main()
             
             else //Wrong command
             {
-                //buffer[strcspn(buffer, "\n")] = 0;
                 if(send(server_sd, buffer, strlen(buffer),0)<0){
                     perror("send");
                     exit(-1);}
@@ -309,7 +314,6 @@ int main()
         
         else
         {
-            //buffer[strcspn(buffer, "\n")] = 0;
             if(send(server_sd, buffer, strlen(buffer),0)<0){
                 perror("send");
                 exit(-1);}
