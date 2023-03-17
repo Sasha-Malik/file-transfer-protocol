@@ -53,26 +53,35 @@ int main()
     
     char buffer[256];
     char bufferCopy[256];
-    char bufferCopy2[256];
+ 
     char bufferCopy3[256];
     int isAuth = -1;
     int pid, transfersocket, status;
     unsigned int new_Port;
     while(1){
         char bufferTemp[256];
+       
         bzero(buffer,sizeof(buffer));
+
         fgets(buffer,sizeof(buffer),stdin);
+
+        if(strcmp(buffer,"\n") == 0){
+        }
+        else
+            buffer[strcspn(buffer, "\n")] = 0;
+
         strcpy(bufferTemp,buffer);
         char *token;
+
         token = strtok(bufferTemp, " ");
-        
+
         char tokenTemp[256];
         strcpy(tokenTemp,token);
         tokenTemp[strcspn(tokenTemp, "\n")] = 0;
         token[strcspn(token, "\n")] = 0;
         if(strcmp(token, "USER") == 0 || strcmp(token, "PASS") == 0 || strcmp(token, "QUIT") == 0)
         {
-            buffer[strcspn(buffer, "\n")] = 0;
+            
             if(send(server_sd, buffer, strlen(buffer),0)<0){
                 perror("send");
                 exit(-1);}
@@ -94,8 +103,9 @@ int main()
                 }
                 input[strcspn(input, "\n")] = 0;
                 if(chdir(input) < 0){
-                    perror("Invalid directory:");
-                    exit(-1);
+                    //perror("Invalid directory:");
+                    printf("550 No such file or directory. \n");
+                    //exit(-1);
                 }
             }
             else if(strcmp(tokenTemp, "!PWD") == 0){
@@ -112,28 +122,28 @@ int main()
             }
             else if(strcmp(token, "CWD") == 0){
                 bzero(bufferCopy3, sizeof(bufferCopy3));
-                tokenTemp[strcspn(tokenTemp, "\n")] = 0;
+                //tokenTemp[strcspn(tokenTemp, "\n")] = 0;
                 strcpy(bufferCopy3, tokenTemp);
                 send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
                 bzero(bufferCopy3, sizeof(bufferCopy3));
                 recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s\n", bufferCopy3);
+                printf("%s \n", bufferCopy3);
             }
             else if(strcmp(token, "PWD") == 0){
                 bzero(bufferCopy3, sizeof(bufferCopy3));
-                token[strcspn(token, "\n")] = 0;
+                //token[strcspn(token, "\n")] = 0;
                 strcpy(bufferCopy3, token);
-                send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                send(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
                 bzero(bufferCopy3, sizeof(bufferCopy3));
-                recv(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
-                printf("%s\n", bufferCopy3);
+                recv(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
+                printf("%s \n", bufferCopy3);
             }
             else if(strcmp(token, "LIST") == 0){
                 bzero(bufferCopy3, sizeof(bufferCopy3));
-                bufferCopy3[strcspn(bufferCopy3, "\n")] = 0;
-                token[strcspn(token, "\n")] = 0;
+                //bufferCopy3[strcspn(bufferCopy3, "\n")] = 0;
+                //token[strcspn(token, "\n")] = 0;
                 strcpy(bufferCopy3, token);
-                send(server_sd, &bufferCopy3, sizeof(bufferCopy3), 0);
+                send(server_sd, bufferCopy3, sizeof(bufferCopy3), 0);
                 bzero(bufferCopy3, sizeof(bufferCopy3));
                 while(1)
                 {
@@ -211,7 +221,7 @@ int main()
                             strcpy(toSend2, tokenSend);
                             tokenSend = strtok(NULL, " "); // separate the next string
                         }
-                        toSend2[strcspn(toSend2, "\n")] = 0;
+                        //toSend2[strcspn(toSend2, "\n")] = 0;
                         
                         if(strcmp(token, "STOR") == 0){
                             bzero(buffer, sizeof(buffer));

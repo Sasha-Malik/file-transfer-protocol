@@ -118,6 +118,11 @@ int main()
                     {
                         
                         printf("buffer from client : %s \n", buffer);
+                        if(strcmp(buffer,"\n") == 0){
+                        }
+                        else
+                            buffer[strcspn(buffer, "\n")] = 0;
+
                         char *token;
                         strcpy(bufferCopy,buffer);
                         token = strtok(bufferCopy, " ");
@@ -232,7 +237,7 @@ int main()
                             printf("%s \n", input);
                             char successMessage[512];
                             sprintf(successMessage, "%s", "257 ");
-                            sprintf(successMessage, "%s\n", input);
+                            //sprintf(successMessage, "%s\n", input);
                             if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);
@@ -388,7 +393,7 @@ int main()
                             
                             input[strcspn(input, "\n")] = 0;
                             
-                            int port = atoi(newPort);
+                            int port = portC;//atoi(newPort);
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
@@ -462,7 +467,7 @@ int main()
                         }//else if stor
                         else if (isAuth == 1)
                         {
-                            printf(": %d \n",isAuth);
+                            //printf(": %d \n",isAuth);
                             char* message = "202 Command not implemented.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
@@ -470,7 +475,7 @@ int main()
                         }
                         else
                         {
-                            printf(": %d \n",isAuth);
+                            //printf(": %d \n",isAuth);
                             char* message = "530 Not logged in.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
