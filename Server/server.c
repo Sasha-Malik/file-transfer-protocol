@@ -429,7 +429,14 @@ int main()
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
-                                
+                                int switched = 0;
+                                if(access(input, F_OK) > 0){
+                                    char b[256];
+                                    bzero(b, sizeof(b));
+                                    mkdir("temp", 0777);
+                                    chdir("temp");
+                                    switched = 1;
+                                }
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
                                 
@@ -456,6 +463,9 @@ int main()
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
+                                if(switched){
+                                    chdir(b);
+                                }
                                 exit(EXIT_SUCCESS);
                             }
                             
