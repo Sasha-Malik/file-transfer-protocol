@@ -118,6 +118,11 @@ int main()
                     {
                         
                         printf("buffer from client : %s \n", buffer);
+                        if(strcmp(buffer,"\n") == 0){
+                        }
+                        else
+                            buffer[strcspn(buffer, "\n")] = 0;
+                        
                         char *token;
                         strcpy(bufferCopy,buffer);
                         token = strtok(bufferCopy, " ");
@@ -136,6 +141,7 @@ int main()
                             
                             if(strcmp(token, "USER") == 0)
                             {
+                                
                                 FILE *fp;
                                 char line[256], *username, *password;
                                 int found = 0;
@@ -178,8 +184,6 @@ int main()
                             
                             else if(strcmp(token, "PASS") == 0 )
                             {
-                                //printf("input: %s \n",input);
-                                //printf("pass: %s \n",input);
                                 
                                 if(strcmp(input,pass) == 0 && userCheck == 1)
                                 {
@@ -202,7 +206,7 @@ int main()
                             }
                             
                         }
-                         else if(strcmp(token, "CWD") == 0 && isAuth == 1){
+                        else if(strcmp(token, "CWD") == 0 && isAuth == 1){
                             char input[256];
                             while (token != NULL) {
                                 strcpy(input, token);
@@ -210,32 +214,40 @@ int main()
                             }
                             input[strcspn(input, "\n")] = 0;
                             if(chdir(input) < 0){
-                                char* errorMessage = "Invalid directory:";
+                                char* errorMessage = "550 No such file or directory.";
                                 if (send(fd, errorMessage, strlen(errorMessage), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);
                                 }
-                                perror(errorMessage);
-                                exit(-1);
+                                //perror(errorMessage);
+                                //exit(-1);
                             }
-                            char successMessage[256];
-                            sprintf(successMessage, "%s", "200 directory changed to ");
-                            sprintf(successMessage, "%s", input);
-                            if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
+                            else
+                            {
+                                char successMessage[256];
+                                char * str = "200 directory changed to ";
+                                strcpy(successMessage,str);
+                                strcat(successMessage,input);
+                                successMessage[strcspn(successMessage, "\n")] = 0;
+                                if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);
+                                }
                             }
+                          
                         }
                         else if(strcmp(token, "PWD") == 0 && isAuth == 1){
                             char input[256];
                             getcwd(input, 256); // removed &
-                            printf("%s \n", input);
-                            char successMessage[512];
-                            sprintf(successMessage, "%s", "257 ");
-                            sprintf(successMessage, "%s\n", input);
+                            //printf("%s \n", input);
+                            char successMessage[256];
+                            char * str = "257 ";
+                            strcpy(successMessage,str);
+                            strcat(successMessage,input);
+                            successMessage[strcspn(successMessage, "\n")] = 0;
                             if (send(fd, successMessage, sizeof(successMessage), 0) < 0){
-                                    perror("Error: send failed");
-                                    exit(EXIT_FAILURE);
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);
                             }
                         }
                         else if(strcmp(token, "LIST") == 0 && isAuth == 1){
@@ -243,12 +255,16 @@ int main()
                             char l[1024];
                             bzero(l, sizeof(l));
                             while(fgets(l, sizeof(l), fptr)){
-                            	  printf("%s", l);
-                                 send(fd, l, sizeof(l), 0);
-                                 bzero(l, sizeof(l));
+                                printf("%s", l);
+                                send(fd, l, sizeof(l), 0);
+                                bzero(l, sizeof(l));
                             }
-                            fclose(fptr);
-                            send(fd, l, sizeof(l), 0);
+                            pclose(fptr);
+                            bzero(l, sizeof(l));
+                            if (send(fd, l, sizeof(l), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);
+                            }
                         }
                         else if(strcmp(token,"PORT") == 0 && isAuth == 1)
                         {
@@ -266,7 +282,7 @@ int main()
                             strcpy(newPort,input);
                             char *tok;
                             int i = 0, nums[6];
-
+                            
                             tok = strtok(newPort, ",");
                             while (tok != NULL && i < 6) {
                                 nums[i] = atoi(tok);
@@ -279,9 +295,9 @@ int main()
                             portC = (p1 * 256) + p2;
                             
                             sprintf(myIP, "%d", nums[0]);
-                               for (i = 1; i < 4; i++) {
-                                   sprintf(myIP + strlen(myIP), ".%d", nums[i]);
-                               }
+                            for (i = 1; i < 4; i++) {
+                                sprintf(myIP + strlen(myIP), ".%d", nums[i]);
+                            }
                             
                             char *message = "200 PORT command successful.";
                             if (send(fd, message, strlen(message), 0) < 0){
@@ -300,6 +316,21 @@ int main()
                             }
                             input[strcspn(input, "\n")] = 0;
                             //printf("input : %s \n",input); //contains the file name
+                            FILE* fptr = fopen(input, "r");
+                            if(fptr == NULL){
+                                char* error = "550 No such File or Directory.";
+                                if (send(fd, error, strlen(error), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);
+                                }
+                            }
+                            
+                            else{
+                                char* success = "150 File status okay; about to open data connection.";
+                                if (send(fd, success, strlen(success), 0) < 0){
+                                    perror("Error: send failed");
+                                    exit(EXIT_FAILURE);}
+                            }
                             
                             int port = portC;//atoi(newPort);
                             
@@ -338,21 +369,8 @@ int main()
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
                                 
-                                char* success = "150 File status okay; about to open data connection.";
-                                if (send(client_sock, success, strlen(success), 0) < 0){
-                                    perror("Error: send failed");
-                                    exit(EXIT_FAILURE);}
                                 
-                                FILE* fptr = fopen(input, "r");
-                                if(fptr == NULL){
-                                    char* error = "550 No such File or Directory.";
-                                    if (send(client_sock, error, strlen(error), 0) < 0){
-                                    perror("Error: send failed");
-                                    exit(EXIT_FAILURE);
-                                    }
-                                    perror(error);
-                                    exit(-1);
-                                }
+                                
                                 char fmsg[1024];
                                 
                                 while (fgets(fmsg, sizeof(fmsg), fptr))
@@ -363,7 +381,7 @@ int main()
                                 fclose(fptr);
                                 send(client_sock, fmsg, sizeof(fmsg), 0);
                                 
-                                success = "226 Transfer completed.";
+                                char * success = "226 Transfer completed.";
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
@@ -371,6 +389,7 @@ int main()
                                 // close client socket and exit child process
                                 close(client_sock);
                                 exit(EXIT_SUCCESS);
+                                
                             }
                             
                         }
@@ -388,7 +407,12 @@ int main()
                             
                             input[strcspn(input, "\n")] = 0;
                             
-                            int port = atoi(newPort);
+                            char* success = "150 File status okay; about to open data connection.";
+                            if (send(fd, success, strlen(success), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);}
+                            
+                            int port = portC;//atoi(newPort);
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
@@ -425,6 +449,7 @@ int main()
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
                                 
+<<<<<<< HEAD
                                 char* success = "150 File status okay; about to open data connection.";
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
@@ -437,6 +462,13 @@ int main()
                                     chdir("temp");
                                     switched = 1;
                                 }
+=======
+                                /* char* success = "150 File status okay; about to open data connection.";
+                                 if (send(client_sock, success, strlen(success), 0) < 0){
+                                 perror("Error: send failed");
+                                 exit(EXIT_FAILURE);}8*/
+                                
+>>>>>>> 859b5112f09c511846b12d985a08644277423745
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
                                 
@@ -472,7 +504,7 @@ int main()
                         }//else if stor
                         else if (isAuth == 1)
                         {
-                            printf(": %d \n",isAuth);
+                            //printf(": %d \n",isAuth);
                             char* message = "202 Command not implemented.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
@@ -480,7 +512,7 @@ int main()
                         }
                         else
                         {
-                            printf(": %d \n",isAuth);
+                            //printf(": %d \n",isAuth);
                             char* message = "530 Not logged in.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
