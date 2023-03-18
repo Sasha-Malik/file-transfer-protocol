@@ -449,7 +449,6 @@ int main()
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
                                 
-<<<<<<< HEAD
                                 char* success = "150 File status okay; about to open data connection.";
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
@@ -462,13 +461,6 @@ int main()
                                     chdir("temp");
                                     switched = 1;
                                 }
-=======
-                                /* char* success = "150 File status okay; about to open data connection.";
-                                 if (send(client_sock, success, strlen(success), 0) < 0){
-                                 perror("Error: send failed");
-                                 exit(EXIT_FAILURE);}8*/
-                                
->>>>>>> 859b5112f09c511846b12d985a08644277423745
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
                                 
