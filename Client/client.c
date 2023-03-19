@@ -52,6 +52,8 @@ int main()
         if(!storedOrRetrieved){
             printf("%s", "ftp>");
         }
+        storedOrRetrieved = 0;
+        
         bzero(buffer,sizeof(buffer));
         
         fgets(buffer,sizeof(buffer),stdin);
@@ -185,11 +187,15 @@ int main()
                         close(server_sd);
                         
                         int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
+                        
+                        setsockopt(transfersocketfd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int));
+                        
                         struct sockaddr_in data_server_addr;
                         bzero(&data_server_addr,sizeof(data_server_addr));
                         data_server_addr.sin_family = AF_INET;
                         data_server_addr.sin_port = htons(new_Port);
                         data_server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                        
                         if(bind(transfersocketfd, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
                             perror("bind error:");
                             exit(-1);
@@ -239,6 +245,7 @@ int main()
                                 bzero(buffer, sizeof(buffer));
                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                                 printf("%s \n", buffer);
+                                storedOrRetrieved = 0;
                             }
                             
                         }
@@ -270,6 +277,7 @@ int main()
                                 bzero(buffer, sizeof(buffer));
                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                                 printf("%s \n", buffer);
+                                storedOrRetrieved = 0;
                             }
                         }
                         
@@ -286,7 +294,7 @@ int main()
                     perror("not successful:");
                     exit(-1);
                 }
-                storedOrRetrieved = 0;
+                
             }
             
             else //Wrong command
