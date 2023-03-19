@@ -11,6 +11,7 @@
 #include<sys/select.h>
 #include<unistd.h>
 #include<stdlib.h>
+#include<sys/stat.h>
 
 int main()
 {
@@ -454,9 +455,9 @@ int main()
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
                                 int switched = 0;
+                                char b[256];
+                                bzero(b, sizeof(b));
                                 if(access(input, F_OK) > 0){
-                                    char b[256];
-                                    bzero(b, sizeof(b));
                                     mkdir("temp", 0777);
                                     chdir("temp");
                                     switched = 1;
