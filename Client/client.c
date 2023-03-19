@@ -29,7 +29,6 @@ int main()
     }
     
     printf("Connected to server \n");
-    //char myIP[16];
     unsigned int myPort;
     struct sockaddr_in my_addr;
     bzero(&my_addr, sizeof(my_addr));
