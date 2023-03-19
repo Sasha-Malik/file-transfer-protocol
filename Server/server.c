@@ -68,6 +68,7 @@ int main()
     int portC = 0;
     char myIP[30];
     char currentUser[256];
+    char masterDirectory[256];
     
     while(1)
     {
@@ -371,8 +372,11 @@ int main()
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
-                                
-                                
+
+                                bzero(masterDirectory, sizeof(masterDirectory));
+                                getcwd(masterDirectory, 256);
+                                mkdir(currentUser, 0777);
+                                chdir(currentUser);
                                 
                                 char fmsg[1024];
                                 
@@ -391,6 +395,7 @@ int main()
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
+                                chdir(masterDirectory);
                                 exit(EXIT_SUCCESS);
                                 
                             }
@@ -457,18 +462,10 @@ int main()
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
 
-                                int switched = 0;
-                                char b[256];
-                                bzero(b, sizeof(b));
-                                if(access(input, F_OK) > 0){
-                                    getcwd(b, 256);
-                                    mkdir("temp", 0777);
-                                    chdir("temp");
-                                    switched = 1;
-                                }
-                                char b2[256];
-                                bzero(b2, sizeof(b2));
-                                getcwd(b2, 256);
+                                bzero(masterDirectory, sizeof(masterDirectory));
+                                getcwd(masterDirectory, 256);
+                                mkdir(currentUser, 0777);
+                                chdir(currentUser);
 
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
@@ -496,21 +493,7 @@ int main()
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
-                                if(switched){
-                                    int lastSlash;
-                                    for(int i = strlen(); i >= 0; i--){
-                                        if(b2[i] == '/'){
-                                            lastSlash = i;
-                                            break;
-                                        }
-                                    }
-                                    char renamedDir[256];
-                                    bzero(renamedDir, sizeof(renamedDir));
-                                    strncpy(renamedDir, b2, lastSlash+1);
-                                    strcat(renamedDir, currentUser);
-                                    rename(b2, renamedDir);
-                                    chdir(b);
-                                }
+                                chdir(masterDirectory);
                                 exit(EXIT_SUCCESS);
                             }
                             
