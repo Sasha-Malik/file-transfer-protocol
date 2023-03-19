@@ -210,7 +210,7 @@ int main()
                         if(strcmp(token, "STOR") == 0){
                             
                             toSend2[strcspn(toSend2, "\n")] = 0;
-                            printf(".%s.\n",toSend2);
+                            //printf(".%s.\n",toSend2);
                             FILE* fptr = fopen(toSend2, "r");
                             if(fptr == NULL){
                                 printf("550 No such file or directory. \n");
