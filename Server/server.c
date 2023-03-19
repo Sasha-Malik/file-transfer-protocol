@@ -457,8 +457,12 @@ int main()
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
                                 
-                                FILE *fptr = fopen(input, "a");
-                                
+                                char originalFile[256];
+                                strcpy(originalFile, input);
+                                rename(input, "temp.txt");
+
+                                FILE *fptr = fopen("temp.txt", "a");
+
                                 char fmsg[1024];
                                 while(1)
                                 {
@@ -480,6 +484,7 @@ int main()
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
+                                rename("temp.txt", originalFile);
                                 exit(EXIT_SUCCESS);
                             }
                             
