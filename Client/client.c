@@ -185,11 +185,15 @@ int main()
                         close(server_sd);
                         
                         int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
+                        
+                        setsockopt(transfersocketfd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int));
+                        
                         struct sockaddr_in data_server_addr;
                         bzero(&data_server_addr,sizeof(data_server_addr));
                         data_server_addr.sin_family = AF_INET;
                         data_server_addr.sin_port = htons(new_Port);
                         data_server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                        
                         if(bind(transfersocketfd, (struct sockaddr *)&data_server_addr, sizeof(data_server_addr)) < 0){
                             perror("bind error:");
                             exit(-1);
