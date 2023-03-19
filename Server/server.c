@@ -206,6 +206,14 @@ int main()
                             }
                             
                         }
+                        else if(strcmp(token, "QUIT") == 0){
+                            char * quitMessage = "221 Service closing control connection";
+                            if (send(fd, quitMessage, strlen(quitMessage), 0) < 0){
+                                perror("Error: send failed");
+                                exit(EXIT_FAILURE);
+                            }                            
+                        }
+
                         else if(strcmp(token, "CWD") == 0 && isAuth == 1){
                             char input[256];
                             while (token != NULL) {

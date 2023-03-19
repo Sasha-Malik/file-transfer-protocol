@@ -79,6 +79,9 @@ int main()
                 isAuth = 1;
             }
             printf("%s \n", buffer);
+            if(strcmp(token, "QUIT") == 0){
+                break;
+            }
         }
         
         else if(isAuth == 1)
