@@ -219,8 +219,7 @@ int main()
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);
                                 }
-                                //perror(errorMessage);
-                                //exit(-1);
+                               
                             }
                             else
                             {
@@ -239,7 +238,7 @@ int main()
                         else if(strcmp(token, "PWD") == 0 && isAuth == 1){
                             char input[256];
                             getcwd(input, 256); // removed &
-                            //printf("%s \n", input);
+                           
                             char successMessage[256];
                             char * str = "257 ";
                             strcpy(successMessage,str);
@@ -315,7 +314,7 @@ int main()
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
                             input[strcspn(input, "\n")] = 0;
-                            //printf("input : %s \n",input); //contains the file name
+                           
                             FILE* fptr = fopen(input, "r");
                             if(fptr == NULL){
                                 char* error = "550 No such File or Directory.";
@@ -448,11 +447,7 @@ int main()
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
-                                
-                                /* char* success = "150 File status okay; about to open data connection.";
-                                 if (send(client_sock, success, strlen(success), 0) < 0){
-                                 perror("Error: send failed");
-                                 exit(EXIT_FAILURE);}8*/
+                
                                 
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
@@ -470,7 +465,6 @@ int main()
                                     if(strcmp(fmsg,"") == 0){
                                         break;}
                                     
-                                    //printf("message : %s \n", fmsg);
                                     fprintf(fptr, "%s", fmsg);
                                     bzero(fmsg, sizeof(fmsg));
                                 }
@@ -491,7 +485,7 @@ int main()
                         }//else if stor
                         else if (isAuth == 1)
                         {
-                            //printf(": %d \n",isAuth);
+                            
                             char* message = "202 Command not implemented.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
@@ -499,7 +493,7 @@ int main()
                         }
                         else
                         {
-                            //printf(": %d \n",isAuth);
+                            
                             char* message = "530 Not logged in.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
