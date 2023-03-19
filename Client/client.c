@@ -7,16 +7,6 @@
 #include<stdlib.h>
 
 
-static int port(int h1, int h2, int h3, int h4, int p1, int p2, int server_sd){
-    char msg[256];
-    sprintf(msg, "PORT %d,%d,%d,%d,%d,%d", h1, h2, h3, h4, p1, p2);
-    if(send(server_sd, msg, strlen(msg), 0) < 0){
-        perror("send");
-        exit(-1);
-    }
-    return 0;
-}
-
 int main()
 {
     //socket
@@ -47,9 +37,8 @@ int main()
     getsockname(server_sd, (struct sockaddr *)&my_addr, &len);
     //inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
     myPort = ntohs(my_addr.sin_port);
-    
     unsigned char* myIP = (unsigned char*)&my_addr.sin_addr;
-    //printf("%hhu,%hhu,%hhu,%hhu \n",h[0],h[1],h[2],h[3] );
+  
     
     char buffer[256];
     char bufferCopy[256];
@@ -160,13 +149,7 @@ int main()
             {
                 i++;
                 new_Port = myPort + i;
-                printf("port:%d \n",new_Port);
-                /*int ipInt = atoi("127.0.0.1");
-                 
-                 int d = (ipInt << 0) & 0xff;
-                 int c = (ipInt << 8) & 0xff;
-                 int b = (ipInt << 16) & 0xff;
-                 int a = (ipInt << 24) & 0xff;*/
+    
                 int h1 = myIP[0], h2 = myIP[1], h3 = myIP[2], h4 = myIP[3];
                 int p1 = new_Port/256;
                 int p2 = new_Port%256;
