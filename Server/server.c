@@ -11,7 +11,6 @@
 #include<sys/select.h>
 #include<unistd.h>
 #include<stdlib.h>
-#include<sys/stat.h>
 
 int main()
 {
@@ -67,8 +66,6 @@ int main()
     char newPort[256];
     int portC = 0;
     char myIP[30];
-    char currentUser[256];
-    char masterDirectory[256];
     
     while(1)
     {
@@ -163,7 +160,6 @@ int main()
                                         strcpy(pass,password);
                                         pass[strcspn(pass, "\n")] = 0;
                                         found = 1;
-                                        strcpy(currentUser, username);
                                         break;}
                                 }
                                 
@@ -372,11 +368,8 @@ int main()
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
-
-                                bzero(masterDirectory, sizeof(masterDirectory));
-                                getcwd(masterDirectory, 256);
-                                mkdir(currentUser, 0777);
-                                chdir(currentUser);
+                                
+                                
                                 
                                 char fmsg[1024];
                                 
@@ -395,7 +388,6 @@ int main()
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
-                                chdir(masterDirectory);
                                 exit(EXIT_SUCCESS);
                                 
                             }
@@ -457,16 +449,11 @@ int main()
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
                                 
-                                char* success = "150 File status okay; about to open data connection.";
-                                if (send(client_sock, success, strlen(success), 0) < 0){
-                                    perror("Error: send failed");
-                                    exit(EXIT_FAILURE);}
-
-                                bzero(masterDirectory, sizeof(masterDirectory));
-                                getcwd(masterDirectory, 256);
-                                mkdir(currentUser, 0777);
-                                chdir(currentUser);
-
+                                /* char* success = "150 File status okay; about to open data connection.";
+                                 if (send(client_sock, success, strlen(success), 0) < 0){
+                                 perror("Error: send failed");
+                                 exit(EXIT_FAILURE);}8*/
+                                
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
                                 
@@ -493,7 +480,6 @@ int main()
                                 
                                 // close client socket and exit child process
                                 close(client_sock);
-                                chdir(masterDirectory);
                                 exit(EXIT_SUCCESS);
                             }
                             
