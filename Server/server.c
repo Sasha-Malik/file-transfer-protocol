@@ -67,6 +67,7 @@ int main()
     char newPort[256];
     int portC = 0;
     char myIP[30];
+    char currentUser[256];
     
     while(1)
     {
@@ -161,6 +162,7 @@ int main()
                                         strcpy(pass,password);
                                         pass[strcspn(pass, "\n")] = 0;
                                         found = 1;
+                                        strcpy(currentUser, username);
                                         break;}
                                 }
                                 
@@ -454,14 +456,20 @@ int main()
                                 if (send(client_sock, success, strlen(success), 0) < 0){
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);}
+
                                 int switched = 0;
                                 char b[256];
                                 bzero(b, sizeof(b));
                                 if(access(input, F_OK) > 0){
+                                    getcwd(b, 256);
                                     mkdir("temp", 0777);
                                     chdir("temp");
                                     switched = 1;
                                 }
+                                char b2[256];
+                                bzero(b2, sizeof(b2));
+                                getcwd(b2, 256);
+
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
                                 
@@ -489,6 +497,18 @@ int main()
                                 // close client socket and exit child process
                                 close(client_sock);
                                 if(switched){
+                                    int lastSlash;
+                                    for(int i = strlen(); i >= 0; i--){
+                                        if(b2[i] == '/'){
+                                            lastSlash = i;
+                                            break;
+                                        }
+                                    }
+                                    char renamedDir[256];
+                                    bzero(renamedDir, sizeof(renamedDir));
+                                    strncpy(renamedDir, b2, lastSlash+1);
+                                    strcat(renamedDir, currentUser);
+                                    rename(b2, renamedDir);
                                     chdir(b);
                                 }
                                 exit(EXIT_SUCCESS);
