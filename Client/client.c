@@ -16,6 +16,7 @@ int main()
         exit(-1);
     }
     int i = 0;
+    int storedOrRetrieved = 0;
     setsockopt(server_sd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int));
     struct sockaddr_in server_addr;
     bzero(&server_addr,sizeof(server_addr));
@@ -48,7 +49,9 @@ int main()
     unsigned int new_Port;
     while(1){
         char bufferTemp[256];
-        printf("%s", "ftp>");
+        if(!storedOrRetrieved){
+            printf("%s", "ftp>");
+        }
         bzero(buffer,sizeof(buffer));
         
         fgets(buffer,sizeof(buffer),stdin);
@@ -169,9 +172,10 @@ int main()
                 recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
                 if(strcmp(bufferCopy, "200 PORT command successful"))
                 {
+                    storedOrRetrieved = 1;
                     printf("%s \n",bufferCopy);
                     send(server_sd, buffer, sizeof(buffer), 0);
-                    
+
                     bzero(bufferCopy, sizeof(bufferCopy));
                     recv(server_sd, bufferCopy, sizeof(bufferCopy), 0);
                     //printf("buffer copy: %s \n", bufferCopy);
@@ -256,8 +260,8 @@ int main()
                                     if(strcmp(fmsg,"") == 0){break;}
                                     
                                     if(b <= 0){
-                                        break;}
-                                    
+                                        break;
+                                    }
                                     fprintf(fptr, "%s", fmsg);
                                     bzero(fmsg, sizeof(fmsg));
                                 }
@@ -282,7 +286,7 @@ int main()
                     perror("not successful:");
                     exit(-1);
                 }
-                
+                storedOrRetrieved = 0;
             }
             
             else //Wrong command
