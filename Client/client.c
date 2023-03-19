@@ -52,6 +52,8 @@ int main()
         if(!storedOrRetrieved){
             printf("%s", "ftp>");
         }
+        storedOrRetrieved = 0;
+        
         bzero(buffer,sizeof(buffer));
         
         fgets(buffer,sizeof(buffer),stdin);
@@ -243,6 +245,7 @@ int main()
                                 bzero(buffer, sizeof(buffer));
                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                                 printf("%s \n", buffer);
+                                storedOrRetrieved = 0;
                             }
                             
                         }
@@ -274,6 +277,7 @@ int main()
                                 bzero(buffer, sizeof(buffer));
                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                                 printf("%s \n", buffer);
+                                storedOrRetrieved = 0;
                             }
                         }
                         
@@ -290,7 +294,7 @@ int main()
                     perror("not successful:");
                     exit(-1);
                 }
-                storedOrRetrieved = 0;
+                
             }
             
             else //Wrong command
