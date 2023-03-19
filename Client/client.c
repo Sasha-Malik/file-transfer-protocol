@@ -49,7 +49,7 @@ int main()
     unsigned int new_Port;
     while(1){
         char bufferTemp[256];
-        
+        printf("%s", "ftp>");
         bzero(buffer,sizeof(buffer));
         
         fgets(buffer,sizeof(buffer),stdin);

@@ -363,7 +363,7 @@ int main()
                                     perror("bind error:");
                                     exit(-1);
                                 }
-                                
+                                sleep(3);
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
@@ -443,7 +443,7 @@ int main()
                                     perror("bind error:");
                                     exit(-1);
                                 }
-                                
+                                sleep(3);
                                 // connect to the client address and port
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
