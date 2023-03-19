@@ -7,7 +7,7 @@
 #include<stdlib.h>
 
 
-static int port(int h1, int h2, int h3, int h4, int p1, int p2, int server_sd){
+/*static int port(int h1, int h2, int h3, int h4, int p1, int p2, int server_sd){
     char msg[256];
     sprintf(msg, "PORT %d,%d,%d,%d,%d,%d", h1, h2, h3, h4, p1, p2);
     if(send(server_sd, msg, strlen(msg), 0) < 0){
@@ -15,7 +15,7 @@ static int port(int h1, int h2, int h3, int h4, int p1, int p2, int server_sd){
         exit(-1);
     }
     return 0;
-}
+}*/
 
 int main()
 {
