@@ -208,6 +208,7 @@ int main()
                         }
                         else if(strcmp(token, "QUIT") == 0){
                             char * quitMessage = "221 Service closing control connection";
+                            break;
                             if (send(fd, quitMessage, strlen(quitMessage), 0) < 0){
                                 perror("Error: send failed");
                                 exit(EXIT_FAILURE);
