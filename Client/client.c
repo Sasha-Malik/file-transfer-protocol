@@ -233,12 +233,18 @@ int main()
                                 
                                 
                                 char fmsg[1024];
+                                char quit[1024];
                                 while (fgets(fmsg, 1024, fptr) != NULL) {
                                     //printf("%s \n", fmsg);
-                                    send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
-                                    bzero(fmsg, sizeof(fmsg));
+                                    fgets(quit, sizeof(quit), stdin);
+                                    if(strcmp(quit, "QUIT") == 0){
+                                        send(new_dedicated_data_sd, quit, sizeof(quit), 0);
+                                    }
+                                    else{
+                                        send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
+                                        bzero(fmsg, sizeof(fmsg));
+                                    }
                                 }
-                                
                                 fclose(fptr);
                                 
                                 send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
@@ -261,10 +267,13 @@ int main()
                                 
                                 FILE* fptr = fopen(toSend2, "a");
                                 char fmsg[1024];
+                                char quit[1024];
                                 while(1)
                                 {
+                                    fgets(quit, sizeof(quit), stdin);
                                     int b = recv(new_dedicated_data_sd,fmsg, sizeof(fmsg), 0);
                                     if(strcmp(fmsg,"") == 0){break;}
+                                    if(strcmp(quit, "QUIT") == 0){break;}
                                     
                                     if(b <= 0){
                                         break;
@@ -280,7 +289,6 @@ int main()
                                 storedOrRetrieved = 0;
                             }
                         }
-                        
                         else if(strcmp(token, "LIST") == 0){
                             recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                             printf("%s \n", buffer);
