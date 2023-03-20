@@ -379,11 +379,16 @@ int main()
                                 
                                 
                                 char fmsg[1024];
-                                
+                                char quit[256];
                                 while (fgets(fmsg, sizeof(fmsg), fptr))
                                 {
+                                    recv(client_sock,quit, sizeof(quit), 0);
+                                    if(strcmp(quit, "QUIT") == 0){
+                                        break;
+                                    }
                                     send(client_sock, fmsg, sizeof(fmsg), 0);
                                     bzero(fmsg, sizeof(fmsg));
+                                    bzero(quit, sizeof(quit));
                                 }
                                 fclose(fptr);
                                 send(client_sock, fmsg, sizeof(fmsg), 0);
@@ -467,12 +472,16 @@ int main()
                                 FILE *fptr = fopen("temp.txt", "a");
 
                                 char fmsg[1024];
+                                char quit[1024];
                                 while(1)
                                 {
                                     int b = recv(client_sock,fmsg, sizeof(fmsg), 0);
                                     if(strcmp(fmsg,"") == 0){
                                         break;}
-                                    
+                                    recv(client_sock, quit, sizeof(quit), 0);
+                                    if(strcmp(quit, "QUIT") == 0){
+                                        break;
+                                    }   
                                     fprintf(fptr, "%s", fmsg);
                                     bzero(fmsg, sizeof(fmsg));
                                 }
