@@ -15,6 +15,7 @@ int main()
         perror("socket:");
         exit(-1);
     }
+    //i is the new port that we open
     int i = 0;
     int storedOrRetrieved = 0;
     setsockopt(server_sd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int));
@@ -23,7 +24,7 @@ int main()
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(9021);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    
+    //connect the socket to the server. 
     if(connect(server_sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
         perror("connect:");
         exit(-1);
@@ -55,7 +56,7 @@ int main()
         storedOrRetrieved = 0;
         
         bzero(buffer,sizeof(buffer));
-        
+        //this is the input from the user. 
         fgets(buffer,sizeof(buffer),stdin);
         
         if(strcmp(buffer,"\n") == 0){
@@ -80,6 +81,7 @@ int main()
                 exit(-1);}
             bzero(buffer,sizeof(buffer));
             recv(server_sd,buffer,sizeof(buffer),0);
+            //we are now authorized. 
             if(strcmp(buffer, "230, User logged in, proceed") == 0){
                 isAuth = 1;
             }
@@ -142,6 +144,7 @@ int main()
                 char l[1024];
                 while(1)
                 {
+                    //in each iteration, l stores some file or subdirectory. 
                     int b = recv(server_sd, l, sizeof(l), 0);
                     if(strcmp(l,"") == 0){
                         break;}
@@ -162,6 +165,7 @@ int main()
                 int p2 = new_Port%256;
                 
                 char msg[256];
+                //we send the port information to the server. 
                 sprintf(msg, "PORT %d,%d,%d,%d,%d,%d", h1, h2, h3, h4, p1, p2);
                 if(send(server_sd, msg, strlen(msg), 0) < 0){
                     perror("send");
@@ -185,7 +189,7 @@ int main()
                     pid = fork();
                     if(pid == 0){
                         close(server_sd);
-                        
+                        //new socket for data transfer. 
                         int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
                         
                         setsockopt(transfersocketfd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int));
@@ -205,12 +209,13 @@ int main()
                             perror("listen error:");
                             exit(-1);
                         }
+                        //new socket for accepting data
                         int new_dedicated_data_sd = accept(transfersocketfd, 0, 0);
                         char bufferSend[256];
                         char toSend2[256];
                         strcpy(bufferSend,buffer);
                         char* tokenSend;
-                        
+                        //split the buffer into multiple parts, check the first word in the buffer before the first space. 
                         tokenSend = strtok(bufferSend, " ");
                         while (tokenSend != NULL) {
                             strcpy(toSend2, tokenSend);
@@ -233,18 +238,12 @@ int main()
                                 
                                 
                                 char fmsg[1024];
-                                char quit[1024];
                                 while (fgets(fmsg, 1024, fptr) != NULL) {
                                     //printf("%s \n", fmsg);
-                                    fgets(quit, sizeof(quit), stdin);
-                                    if(strcmp(quit, "QUIT") == 0){
-                                        send(new_dedicated_data_sd, quit, sizeof(quit), 0);
-                                    }
-                                    else{
-                                        send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
-                                        bzero(fmsg, sizeof(fmsg));
-                                    }
+                                    send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
+                                    bzero(fmsg, sizeof(fmsg));
                                 }
+                                
                                 fclose(fptr);
                                 
                                 send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
@@ -262,18 +261,16 @@ int main()
                             
                             if(strcmp(bufferCopy,"550 No such File or Directory.") != 0)
                             {
+                                //create a new file. 
                                 FILE *fp = fopen(toSend2, "w");
                                 fclose(fp);
-                                
+                                //open it in append mode. 
                                 FILE* fptr = fopen(toSend2, "a");
                                 char fmsg[1024];
-                                char quit[1024];
                                 while(1)
                                 {
-                                    fgets(quit, sizeof(quit), stdin);
                                     int b = recv(new_dedicated_data_sd,fmsg, sizeof(fmsg), 0);
                                     if(strcmp(fmsg,"") == 0){break;}
-                                    if(strcmp(quit, "QUIT") == 0){break;}
                                     
                                     if(b <= 0){
                                         break;
@@ -289,6 +286,7 @@ int main()
                                 storedOrRetrieved = 0;
                             }
                         }
+                        
                         else if(strcmp(token, "LIST") == 0){
                             recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                             printf("%s \n", buffer);
