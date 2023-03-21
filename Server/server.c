@@ -1,8 +1,3 @@
-//============================================================================
-// Name         : Chat Server using Select()
-// Description  : This Program will receive messages from several clients using
-//                select() system class
-//============================================================================
 #include<stdio.h>
 #include<string.h>
 #include<sys/socket.h>
@@ -24,7 +19,7 @@ int main()
     }
     //setsock
     int value  = 1;
-    setsockopt(server_sd,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value)); //&(int){1},sizeof(int)
+    setsockopt(server_sd,SOL_SOCKET,SO_REUSEADDR,&value,sizeof(value));
     struct sockaddr_in server_addr;
     bzero(&server_addr,sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -59,7 +54,6 @@ int main()
     char pass[256];
     int client_sd;
     int client_sock;
-    char space[1] = " ";
     int userCheck = 0;
     int isAuth = 0;
     int auth[100];
@@ -211,9 +205,9 @@ int main()
                             if (send(fd, quitMessage, strlen(quitMessage), 0) < 0){
                                 perror("Error: send failed");
                                 exit(EXIT_FAILURE);
-                            }                            
+                            }
                         }
-
+                        
                         else if(strcmp(token, "CWD") == 0 && isAuth == 1){
                             char input[256];
                             while (token != NULL) {
@@ -227,7 +221,7 @@ int main()
                                     perror("Error: send failed");
                                     exit(EXIT_FAILURE);
                                 }
-                               
+                                
                             }
                             else
                             {
@@ -241,12 +235,12 @@ int main()
                                     exit(EXIT_FAILURE);
                                 }
                             }
-                          
+                            
                         }
                         else if(strcmp(token, "PWD") == 0 && isAuth == 1){
                             char input[256];
-                            getcwd(input, 256); // removed &
-                           
+                            getcwd(input, 256);
+                            
                             char successMessage[256];
                             char * str = "257 ";
                             strcpy(successMessage,str);
@@ -322,7 +316,7 @@ int main()
                                 token1 = strtok(NULL, " "); // separate the next string
                             }
                             input[strcspn(input, "\n")] = 0;
-                           
+                            
                             FILE* fptr = fopen(input, "r");
                             if(fptr == NULL){
                                 char* error = "550 No such File or Directory.";
@@ -339,12 +333,12 @@ int main()
                                     exit(EXIT_FAILURE);}
                             }
                             
-                            int port = portC;//atoi(newPort);
+                            int port = portC; //new port
                             
                             int pid = fork(); //fork a child process
                             if(pid == 0)   //if it is the child process
                             {
-                                close(server_sd);//SHOULD BE FD?
+                                close(server_sd);
                                 
                                 if ((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
                                 {   perror("socket failed");
@@ -375,7 +369,6 @@ int main()
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
-                                
                                 
                                 
                                 char fmsg[1024];
@@ -455,7 +448,7 @@ int main()
                                 if (connect(client_sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0){
                                     perror("Error: connect failed");
                                     exit(EXIT_FAILURE);}
-                
+                                
                                 
                                 FILE *fp = fopen(input, "w");
                                 fclose(fp);
@@ -463,9 +456,9 @@ int main()
                                 char originalFile[256];
                                 strcpy(originalFile, input);
                                 rename(input, "temp.txt");
-
+                                
                                 FILE *fptr = fopen("temp.txt", "a");
-
+                                
                                 char fmsg[1024];
                                 while(1)
                                 {
@@ -493,7 +486,6 @@ int main()
                         }//else if stor
                         else if (isAuth == 1)
                         {
-                            
                             char* message = "202 Command not implemented.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
@@ -501,21 +493,19 @@ int main()
                         }
                         else
                         {
-                            
                             char* message = "530 Not logged in.";
                             if(send(fd, message, strlen(message), 0) < 0){
                                 perror("Error: send failed");
                                 exit(EXIT_FAILURE);}
                         }
-                    } //else
-                }//another else
-            }//if
-            
-        }//for
+                    }
+                }
+            }
+        }
         
-    }//while
+    }
     
     //close
     close(server_sd);
     return 0;
-}//int main
+}
