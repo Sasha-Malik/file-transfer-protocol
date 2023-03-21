@@ -24,13 +24,14 @@ int main()
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(9021);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    //connect the socket to the server. 
+    //connect the socket to the server.
+    
     if(connect(server_sd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
         perror("connect:");
         exit(-1);
     }
     
-    printf("Connected to server \n");
+    printf("220 Service ready for new user. \n");
     unsigned int myPort;
     struct sockaddr_in my_addr;
     bzero(&my_addr, sizeof(my_addr));
@@ -39,7 +40,7 @@ int main()
     //inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
     myPort = ntohs(my_addr.sin_port);
     unsigned char* myIP = (unsigned char*)&my_addr.sin_addr;
-  
+    
     
     char buffer[256];
     char bufferCopy[256];
@@ -56,7 +57,7 @@ int main()
         storedOrRetrieved = 0;
         
         bzero(buffer,sizeof(buffer));
-        //this is the input from the user. 
+        //this is the input from the user.
         fgets(buffer,sizeof(buffer),stdin);
         
         if(strcmp(buffer,"\n") == 0){
@@ -81,7 +82,7 @@ int main()
                 exit(-1);}
             bzero(buffer,sizeof(buffer));
             recv(server_sd,buffer,sizeof(buffer),0);
-            //we are now authorized. 
+            //we are now authorized.
             if(strcmp(buffer, "230, User logged in, proceed") == 0){
                 isAuth = 1;
             }
@@ -108,7 +109,7 @@ int main()
             }
             else if(strcmp(tokenTemp, "!PWD") == 0){
                 char input[256];
-                getcwd(input, 256); // removed &
+                getcwd(input, 256);
                 printf("%s \n", input);
             }
             else if(strcmp(token, "!LIST") == 0){
@@ -144,7 +145,7 @@ int main()
                 char l[1024];
                 while(1)
                 {
-                    //in each iteration, l stores some file or subdirectory. 
+                    //in each iteration, l stores some file or subdirectory.
                     int b = recv(server_sd, l, sizeof(l), 0);
                     if(strcmp(l,"") == 0){
                         break;}
@@ -159,20 +160,18 @@ int main()
             {
                 i++;
                 new_Port = myPort + i;
-    
+                
                 int h1 = myIP[0], h2 = myIP[1], h3 = myIP[2], h4 = myIP[3];
                 int p1 = new_Port/256;
                 int p2 = new_Port%256;
                 
                 char msg[256];
-                //we send the port information to the server. 
+                //we send the port information to the server.
                 sprintf(msg, "PORT %d,%d,%d,%d,%d,%d", h1, h2, h3, h4, p1, p2);
                 if(send(server_sd, msg, strlen(msg), 0) < 0){
                     perror("send");
                     exit(-1);
                 }
-                
-                //port(a, b, c, d, e, f, server_sd);
                 
                 bzero(bufferCopy, sizeof(bufferCopy));
                 recv(server_sd, &bufferCopy, sizeof(bufferCopy), 0);
@@ -181,17 +180,16 @@ int main()
                     storedOrRetrieved = 1;
                     printf("%s \n",bufferCopy);
                     send(server_sd, buffer, sizeof(buffer), 0);
-
+                    
                     bzero(bufferCopy, sizeof(bufferCopy));
                     recv(server_sd, bufferCopy, sizeof(bufferCopy), 0);
-                    //printf("buffer copy: %s \n", bufferCopy);
                     
                     pid = fork();
                     if(pid == 0){
-                        close(server_sd);
-                        //new socket for data transfer. 
-                        int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
                         
+                        //close(server_sd);
+                        //new socket for data transfer.
+                        int transfersocketfd = socket(AF_INET, SOCK_STREAM, 0);
                         setsockopt(transfersocketfd,SOL_SOCKET,SO_REUSEADDR,&(int){1},sizeof(int));
                         
                         struct sockaddr_in data_server_addr;
@@ -215,37 +213,31 @@ int main()
                         char toSend2[256];
                         strcpy(bufferSend,buffer);
                         char* tokenSend;
-                        //split the buffer into multiple parts, check the first word in the buffer before the first space. 
+                        //split the buffer into multiple parts, check the first word in the buffer before the first space.
                         tokenSend = strtok(bufferSend, " ");
                         while (tokenSend != NULL) {
                             strcpy(toSend2, tokenSend);
                             tokenSend = strtok(NULL, " "); // separate the next string
                         }
-                        //printf("token : .%s. \n",token);
+                        
                         if(strcmp(token, "STOR") == 0){
                             
                             toSend2[strcspn(toSend2, "\n")] = 0;
-                            //printf(".%s.\n",toSend2);
                             FILE* fptr = fopen(toSend2, "r");
                             if(fptr == NULL){
                                 printf("550 No such file or directory. \n");
                             }
                             else{
                                 
-                                /*bzero(buffer, sizeof(buffer));
-                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);*/
-                                printf("%s \n", bufferCopy);
-                                
+                                printf("%s \n", bufferCopy);//printing 150 success
                                 
                                 char fmsg[1024];
                                 while (fgets(fmsg, 1024, fptr) != NULL) {
-                                    //printf("%s \n", fmsg);
                                     send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
                                     bzero(fmsg, sizeof(fmsg));
                                 }
                                 
                                 fclose(fptr);
-                                
                                 send(new_dedicated_data_sd, fmsg, sizeof(fmsg), 0);
                                 bzero(buffer, sizeof(buffer));
                                 recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
@@ -255,16 +247,15 @@ int main()
                             
                         }
                         else if(strcmp(token, "RETR") == 0){
-                            /*bzero(buffer, sizeof(buffer));
-                             recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);*/
+                            
                             printf("%s \n", bufferCopy);
                             
                             if(strcmp(bufferCopy,"550 No such File or Directory.") != 0)
                             {
-                                //create a new file. 
+                                //create a new file.
                                 FILE *fp = fopen(toSend2, "w");
                                 fclose(fp);
-                                //open it in append mode. 
+                                //open it in append mode.
                                 FILE* fptr = fopen(toSend2, "a");
                                 char fmsg[1024];
                                 while(1)
@@ -291,7 +282,6 @@ int main()
                             recv(new_dedicated_data_sd, buffer, sizeof(buffer), 0);
                             printf("%s \n", buffer);
                         }
-                        
                         close(new_dedicated_data_sd);
                     }
                     
@@ -315,7 +305,7 @@ int main()
             
         }
         
-        else
+        else //not logged in
         {
             if(send(server_sd, buffer, strlen(buffer),0)<0){
                 perror("send");
